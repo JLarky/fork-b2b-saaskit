@@ -38,7 +38,7 @@ B2B companies are fairly common - for example, over 40% of <a href="https://www.
 
 [Drizzle ORM](https://orm.drizzle.team/kit-docs/overview)
 
-[Prettier](https://prettier.io/)
+[Oxfmt](https://oxc.rs/docs/guide/usage/formatter)
 
 [Oxlint](https://oxc.rs/docs/guide/usage/linter)
 
@@ -59,7 +59,6 @@ B2B companies are fairly common - for example, over 40% of <a href="https://www.
 ### Get it running locally
 
 1. Install prerequisites
-
    - Node.js 18.17, Node.js 20.3 or Node.js 22. See more in [Astro docs](https://docs.astro.build/en/install-and-setup/#prerequisites)
 
 2. Clone repo, start app

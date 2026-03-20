@@ -1,28 +1,23 @@
 {
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
   "printWidth": 100,
   "singleQuote": true,
   "tabWidth": 2,
   "useTabs": true,
   "trailingComma": "es5",
-  "plugins": ["prettier-plugin-astro"],
+  "ignorePatterns": ["/.astro", "dist", ".vscode", ".vercel", "src/db/meta/"],
   "overrides": [
     {
-      "files": "package.json",
+      "files": ["package.json"],
       "options": {
-        "printWidth": 9999
+        "printWidth": 320
       }
     },
     {
-      "files": "*.{json,md,prettierrc}",
+      "files": ["*.json", "*.md"],
       "options": {
         "useTabs": false,
         "singleQuote": false
-      }
-    },
-    {
-      "files": "*.astro",
-      "options": {
-        "parser": "astro"
       }
     }
   ]
