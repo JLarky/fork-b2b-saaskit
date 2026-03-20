@@ -1,0 +1,27 @@
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout actions
+        uses: actions/checkout@v3
+      - name: Prepare actions
+        uses: ./.github/actions/prepare
+      - name: Sync astro
+        run: yarn astro sync
+      - name: Unit tests
+        run: yarn test
+      - uses: mshick/add-pr-comment@v2
+        if: failure()
+        with:
+          message-failure: |
+            Uh oh! Tests failed. Run `yarn test` locally to reproduce.
+
+name: Test
+
+on:
+  pull_request: ~
+  merge_group: ~
+
+  push:
+    branches:
+      - main
