@@ -112,6 +112,7 @@ export const Internal = ({
 			userAvatarUrl: auth.user.pictureUrl,
 			userJWT,
 		};
+	// oxlint-disable-next-line react-hooks/exhaustive-deps
 	}, [auth.user, activeOrg, fogbenderQuery.data?.userJWT]);
 
 	const isNotFullScreenSupport = null === useMatch('/app/support');
