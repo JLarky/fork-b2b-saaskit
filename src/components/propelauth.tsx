@@ -1,4 +1,4 @@
-/* oxlint-disable react-refresh/only-export-components */
+/* oxlint-disable react/only-export-components */
 import propel from '@propelauth/react';
 import * as propel2 from '@propelauth/react';
 import { useEffect } from 'react';
