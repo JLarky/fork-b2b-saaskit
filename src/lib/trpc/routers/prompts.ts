@@ -7,10 +7,10 @@ import { z } from 'zod';
 import type { PrivacyLevel } from '../../../components/app/utils';
 import { db } from '../../../db/db';
 import { gptKeys, promptLikes, prompts, sharedKeyRatelimit } from '../../../db/schema';
-import { usersToPublicUserInfo } from '../../../pages/api/orgs/[orgId]';
 import { serverEnv } from '../../../t3-env';
 import { trackEvent } from '../../posthog';
 import { propelauth } from '../../propelauth';
+import { usersToPublicUserInfo } from '../../publicUserInfo';
 import { getStripeConfig, searchSubscriptionsByOrgId } from '../../stripe';
 import {
 	apiProcedure,

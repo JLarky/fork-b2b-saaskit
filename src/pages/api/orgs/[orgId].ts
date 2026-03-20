@@ -1,6 +1,7 @@
-import { handleError, initBaseAuth, type UserMetadata } from '@propelauth/node';
+import { handleError, initBaseAuth } from '@propelauth/node';
 import type { APIRoute } from 'astro';
 
+import { publicUserInfo } from '../../../lib/publicUserInfo';
 import { serverEnv } from '../../../t3-env';
 
 export const prerender = false;
@@ -39,22 +40,3 @@ export const GET: APIRoute = async ({ params, request }) => {
 		return new Response(err.message, { status: err.status });
 	}
 };
-
-export function publicUserInfo(user: UserMetadata) {
-	return {
-		userId: user.userId,
-		name: [user.firstName, user.lastName].filter(Boolean).join(' ') || user.username,
-		pictureUrl: user.pictureUrl,
-		email: user.email,
-	};
-}
-
-export type PublicUserInfo = ReturnType<typeof publicUserInfo>;
-
-export function usersToPublicUserInfo(users: { [userId: string]: UserMetadata }): {
-	[userId: string]: PublicUserInfo;
-} {
-	return Object.fromEntries(
-		Object.entries(users).map(([userId, user]) => [userId, publicUserInfo(user)])
-	);
-}
