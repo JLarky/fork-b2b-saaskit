@@ -3,3 +3,5 @@ dist
 .vscode
 .vercel
 src/db/meta/
+# Varlock-generated (run `npx varlock typegen`)
+src/env.d.ts

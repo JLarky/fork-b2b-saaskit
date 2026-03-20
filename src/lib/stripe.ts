@@ -1,12 +1,11 @@
 import Stripe from 'stripe';
-
-import { serverEnv } from '../t3-env';
+import { ENV } from 'varlock/env';
 
 export const getStripeConfig = () => {
-	if (serverEnv.STRIPE_SECRET_KEY !== undefined && serverEnv.STRIPE_PRICE_ID !== undefined) {
+	if (ENV.STRIPE_SECRET_KEY !== undefined && ENV.STRIPE_PRICE_ID !== undefined) {
 		return {
-			apiKey: serverEnv.STRIPE_SECRET_KEY,
-			priceId: serverEnv.STRIPE_PRICE_ID,
+			apiKey: ENV.STRIPE_SECRET_KEY,
+			priceId: ENV.STRIPE_PRICE_ID,
 		};
 	} else {
 		return undefined;

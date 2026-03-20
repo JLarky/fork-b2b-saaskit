@@ -1,24 +1,24 @@
 import { handleError, initBaseAuth } from '@propelauth/node';
 import type { APIRoute } from 'astro';
 import jsonwebtoken from 'jsonwebtoken';
+import { ENV } from 'varlock/env';
 
-import { serverEnv } from '../../t3-env';
 import type { FogbenderTokenResponse } from '../../types/types';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request }) => {
 	const propelauth = initBaseAuth({
-		authUrl: serverEnv.PUBLIC_AUTH_URL,
-		apiKey: serverEnv.PROPELAUTH_API_KEY,
+		authUrl: ENV.PUBLIC_AUTH_URL,
+		apiKey: ENV.PROPELAUTH_API_KEY,
 		manualTokenVerificationMetadata: {
-			verifierKey: serverEnv.PROPELAUTH_VERIFIER_KEY,
-			issuer: serverEnv.PUBLIC_AUTH_URL,
+			verifierKey: ENV.PROPELAUTH_VERIFIER_KEY,
+			issuer: ENV.PUBLIC_AUTH_URL,
 		},
 	});
 	const token = request.headers.get('Authorization');
 	try {
-		const secret = serverEnv.FOGBENDER_SECRET;
+		const secret = ENV.FOGBENDER_SECRET;
 		if (!secret) {
 			throw new Error('FOGBENDER_SECRET was not configured');
 		}

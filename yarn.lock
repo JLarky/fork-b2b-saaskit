@@ -1814,11 +1814,6 @@
     fflate "^0.7.3"
     string.prototype.codepointat "^0.2.1"
 
-"@t3-oss/env-core@^0.6.0":
-  version "0.6.0"
-  resolved "https://registry.yarnpkg.com/@t3-oss/env-core/-/env-core-0.6.0.tgz#a2e6a6a2b166aad2df7ecc5e7a72400946a84fbe"
-  integrity sha512-3FkPAba069WRZVVab/sB1m3eSGn/rZeypx5k+sWEu1d+k0OQdRDnvFS+7MtxYgqVrwaRk3b7yVnX2dgSPVmWPQ==
-
 "@tailwindcss/typography@^0.5.9":
   version "0.5.9"
   resolved "https://registry.yarnpkg.com/@tailwindcss/typography/-/typography-0.5.9.tgz#027e4b0674929daaf7c921c900beee80dbad93e8"
@@ -2081,6 +2076,11 @@
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@ungap/structured-clone/-/structured-clone-1.2.0.tgz#756641adb587851b5ccb3e095daf27ae581c8406"
   integrity sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==
+
+"@varlock/astro-integration@^0.2.5":
+  version "0.2.5"
+  resolved "https://registry.yarnpkg.com/@varlock/astro-integration/-/astro-integration-0.2.5.tgz#817d87cc453a6d4b95921d1411cbf4344036b182"
+  integrity sha512-1BhyX91JmmSjD7HhF2pWqBaqwwKg4eT0J+CeVZuXDzMRMg1DxyIFvgUoHxCdBQRzznSbmmNKD3pI3aF8hwCd3g==
 
 "@vercel/analytics@^1.4.1":
   version "1.4.1"
@@ -6425,6 +6425,11 @@ utility-types@^3.10.0:
   version "3.10.0"
   resolved "https://registry.yarnpkg.com/utility-types/-/utility-types-3.10.0.tgz#ea4148f9a741015f05ed74fd615e1d20e6bed82b"
   integrity sha512-O11mqxmi7wMKCo6HKFt5AhO4BwY3VV68YU07tgxfz8zJTIxr4BpsezN49Ffwy9j3ZpwwJp4fkRwjRzq3uWE6Rg==
+
+varlock@^0.6.2:
+  version "0.6.2"
+  resolved "https://registry.yarnpkg.com/varlock/-/varlock-0.6.2.tgz#035e31e2d7d75378b926aa042319b6e8e43e1b6e"
+  integrity sha512-YIg6T4OoLcfhhp3IbBorETdkOZNJb4luGaqsyVT+z59QSwQrjTjbGx9sn0+S85MQSZaGHkKSme00254F7I3qHg==
 
 vfile-location@^5.0.0:
   version "5.0.3"

@@ -1,5 +1,10 @@
-import type { ClientEnv } from './t3-env';
+import type { PublicTypedEnvSchema } from 'varlock/env';
+import { ENV } from 'varlock/env';
 
-// use clientEnv for client-only code so that you don't ship zod dependency to the client
-// vite only supports string values in import.meta.env
-export const env = import.meta.env as unknown as ClientEnv satisfies Record<string, string>;
+// Public, non-sensitive values — each `ENV.*` access is inlined for the client bundle by @varlock/astro-integration.
+export const env: PublicTypedEnvSchema = {
+	PUBLIC_AUTH_URL: ENV.PUBLIC_AUTH_URL,
+	PUBLIC_FOGBENDER_WIDGET_ID: ENV.PUBLIC_FOGBENDER_WIDGET_ID,
+	PUBLIC_POSTHOG_KEY: ENV.PUBLIC_POSTHOG_KEY,
+	STRIPE_PRICE_ID: ENV.STRIPE_PRICE_ID,
+};

@@ -1,7 +1,6 @@
 import type { User } from '@propelauth/node';
 import { PostHog } from 'posthog-node';
-
-import { serverEnv } from '../t3-env';
+import { ENV } from 'varlock/env';
 
 type Session = {
 	sessionId: string;
@@ -9,8 +8,8 @@ type Session = {
 };
 
 export async function trackEvent(userOrSession: User | Session, event: string) {
-	if (serverEnv.PUBLIC_POSTHOG_KEY) {
-		const client = new PostHog(serverEnv.PUBLIC_POSTHOG_KEY);
+	if (ENV.PUBLIC_POSTHOG_KEY) {
+		const client = new PostHog(ENV.PUBLIC_POSTHOG_KEY);
 		const { distinctId, properties } = (() => {
 			if ('userId' in userOrSession) {
 				const { orgIdToOrgMemberInfo: _, ...user } = userOrSession;

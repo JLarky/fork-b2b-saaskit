@@ -2,12 +2,12 @@ import type { User } from '@propelauth/node';
 import { TRPCError } from '@trpc/server';
 import { and, eq, or, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
+import { ENV } from 'varlock/env';
 import { z } from 'zod';
 
 import type { PrivacyLevel } from '../../../components/app/utils';
 import { db } from '../../../db/db';
 import { gptKeys, promptLikes, prompts, sharedKeyRatelimit } from '../../../db/schema';
-import { serverEnv } from '../../../t3-env';
 import { trackEvent } from '../../posthog';
 import { propelauth } from '../../propelauth';
 import { usersToPublicUserInfo } from '../../publicUserInfo';
@@ -309,7 +309,7 @@ export const promptsRouter = createTRPCRouter({
 			if (key) {
 				secretKey = key.keySecret;
 			} else {
-				if (!serverEnv.OPENAI_API_KEY) {
+				if (!ENV.OPENAI_API_KEY) {
 					throw new TRPCError({
 						code: 'NOT_FOUND',
 						message: 'No OpenAI key found for this organization',
@@ -327,9 +327,9 @@ export const promptsRouter = createTRPCRouter({
 					const remaining = await rateLimitUpsert(ctx.user.userId, Date.now());
 
 					if (hasSubscription || remaining > 0) {
-						secretKey = serverEnv.OPENAI_API_KEY;
+						secretKey = ENV.OPENAI_API_KEY;
 					} else {
-						const message = serverEnv.STRIPE_SECRET_KEY
+						const message = ENV.STRIPE_SECRET_KEY
 							? 'You have exceeded your daily rate limit. To fix this, add your own OpenAI key or purchase a subscription.'
 							: 'You have exceeded your daily rate limit. To fix this, add your own OpenAI key.';
 						throw new TRPCError({
@@ -372,7 +372,7 @@ export const promptsRouter = createTRPCRouter({
 		}),
 
 	getDefaultKey: authProcedure.query(async ({ ctx }) => {
-		if (serverEnv.OPENAI_API_KEY) {
+		if (ENV.OPENAI_API_KEY) {
 			const usage = await db
 				.select({
 					value: sharedKeyRatelimit.value,

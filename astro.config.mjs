@@ -1,11 +1,12 @@
 import react from '@astrojs/react';
 import vercel from '@astrojs/vercel';
+import varlock from '@varlock/astro-integration';
 import { defineConfig } from 'astro/config';
 import checker from 'vite-plugin-checker';
 
 // https://astro.build/config
 export default defineConfig({
-	integrations: [react()],
+	integrations: [varlock(), react()],
 	adapter: vercel({}),
 	site: process.env.SITE_URL,
 	vite: {

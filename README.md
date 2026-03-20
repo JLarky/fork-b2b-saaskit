@@ -86,6 +86,10 @@ Please refer to section `9. Production deployment to Vercel` of the [setup guide
 
 # Working with the codebase
 
+### Environment variables (Varlock)
+
+Configuration is defined in `.env.schema` and loaded with [Varlock](https://varlock.dev/). The Astro integration (`@varlock/astro-integration` in `astro.config.mjs`) resolves and validates env when you run `yarn dev` or `yarn build`. Server code uses `import { ENV } from 'varlock/env'`; public (non-sensitive) values are also exposed through `src/config.ts` for client bundles. After changing the schema, run `npx varlock typegen` to refresh `src/env.d.ts`.
+
 ### DB migrations with Drizzle ORM
 
 We're using Drizzle ORM to manage database migrations in B2B SaaS Kit. For details on Drizzle, see https://orm.drizzle.team/kit-docs/overview.

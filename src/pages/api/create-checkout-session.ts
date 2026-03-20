@@ -1,18 +1,18 @@
 import { handleError, initBaseAuth } from '@propelauth/node';
 import type { APIRoute } from 'astro';
+import { ENV } from 'varlock/env';
 
 import { getStripeConfig, openStripe } from '../../lib/stripe';
-import { serverEnv } from '../../t3-env';
 
 export const prerender = false;
 
 export const POST: APIRoute = async ({ request }) => {
 	const propelauth = initBaseAuth({
-		authUrl: serverEnv.PUBLIC_AUTH_URL,
-		apiKey: serverEnv.PROPELAUTH_API_KEY,
+		authUrl: ENV.PUBLIC_AUTH_URL,
+		apiKey: ENV.PROPELAUTH_API_KEY,
 		manualTokenVerificationMetadata: {
-			verifierKey: serverEnv.PROPELAUTH_VERIFIER_KEY,
-			issuer: serverEnv.PUBLIC_AUTH_URL,
+			verifierKey: ENV.PROPELAUTH_VERIFIER_KEY,
+			issuer: ENV.PUBLIC_AUTH_URL,
 		},
 	});
 

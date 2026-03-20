@@ -1,12 +1,11 @@
 import { initBaseAuth } from '@propelauth/node';
-
-import { serverEnv } from '../t3-env';
+import { ENV } from 'varlock/env';
 
 export const propelauth = initBaseAuth({
-	authUrl: serverEnv.PUBLIC_AUTH_URL,
-	apiKey: serverEnv.PROPELAUTH_API_KEY,
+	authUrl: ENV.PUBLIC_AUTH_URL,
+	apiKey: ENV.PROPELAUTH_API_KEY,
 	manualTokenVerificationMetadata: {
-		verifierKey: serverEnv.PROPELAUTH_VERIFIER_KEY,
-		issuer: serverEnv.PUBLIC_AUTH_URL,
+		verifierKey: ENV.PROPELAUTH_VERIFIER_KEY,
+		issuer: ENV.PUBLIC_AUTH_URL,
 	},
 });

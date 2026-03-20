@@ -1,14 +1,12 @@
 ---
 import '../styles/tailwind.css';
 
-import type { Simplify } from '@t3-oss/env-core';
-
 import pwf from '../assets/b2b7.svg?url';
 import CheckerOverlay from '../components/head/CheckerOverlay.astro';
 import Posthog from '../components/head/Posthog.astro';
 import SEO, { type Props as SeoProps } from '../components/head/SEO.astro';
 
-export type Props = Simplify<SeoProps>;
+export type Props = SeoProps;
 const props = Astro.props;
 ---
 
