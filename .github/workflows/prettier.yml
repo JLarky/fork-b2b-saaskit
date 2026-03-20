@@ -7,7 +7,7 @@ jobs:
       - name: Prepare actions
         uses: ./.github/actions/prepare
       - name: Prettier
-        run: yarn fmt --check --write=false
+        run: yarn fmt:check
       - uses: mshick/add-pr-comment@v2
         if: failure()
         with:
