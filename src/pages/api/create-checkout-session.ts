@@ -1,8 +1,8 @@
 import { handleError, initBaseAuth } from '@propelauth/node';
 import type { APIRoute } from 'astro';
 
+import { serverEnv } from '../../env';
 import { getStripeConfig, openStripe } from '../../lib/stripe';
-import { serverEnv } from '../../t3-env';
 
 export const prerender = false;
 

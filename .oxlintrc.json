@@ -12,7 +12,8 @@
     ".vscode",
     ".vercel",
     "src/db/migrations",
-    "src/env.d.ts"
+    "src/astro.d.ts",
+    "src/varlock-env.d.ts"
   ],
   "rules": {
     "no-unused-expressions": ["error", { "allowShortCircuit": true }],

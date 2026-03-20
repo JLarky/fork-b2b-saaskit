@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 
-import { serverEnv } from '../t3-env';
+import { serverEnv } from '../env';
 
 export const getStripeConfig = () => {
 	if (serverEnv.STRIPE_SECRET_KEY !== undefined && serverEnv.STRIPE_PRICE_ID !== undefined) {
