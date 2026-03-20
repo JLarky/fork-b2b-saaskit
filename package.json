@@ -13,7 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "preview": "astro preview",
-    "lint": "oxlint .",
+    "lint": "oxlint . --deny-warnings",
     "fmt": "prettier --write --ignore-unknown .",
     "fix": "yarn lint:fix; yarn fmt",
     "lint:fix": "oxlint . --fix",
