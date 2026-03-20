@@ -1,6 +1,6 @@
 ---
-title: "Preview deployment to Vercel"
-needsEnv: ["PROD"]
+title: 'Preview deployment to Vercel'
+needsEnv: ['PROD']
 ---
 
 Preview deployments are tricky to configure because they are not quite production, but also not quite development. The main issue is that PropelAuth only lets you configure CORS to accept subdomains for your own domain - you can't use `something.vercel.app`.

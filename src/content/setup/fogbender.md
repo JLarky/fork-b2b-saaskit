@@ -1,6 +1,6 @@
 ---
-title: "Customer support with Fogbender (optional)"
-needsEnv: ["PUBLIC_FOGBENDER_WIDGET_ID", "FOGBENDER_SECRET"]
+title: 'Customer support with Fogbender (optional)'
+needsEnv: ['PUBLIC_FOGBENDER_WIDGET_ID', 'FOGBENDER_SECRET']
 ---
 
 Fogbender (<a href="https://fogbender.com" >https://fogbender.com</a>) is a B2B customer support tool that enables users associated with the same customer organization to collaborate in vendor support conversations as a team.

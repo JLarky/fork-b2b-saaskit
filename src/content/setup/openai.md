@@ -1,6 +1,6 @@
 ---
-title: "Configure default OpenAI key for PromptsWithFriends (optional)"
-needsEnv: ["OPENAI_API_KEY"]
+title: 'Configure default OpenAI key for PromptsWithFriends (optional)'
+needsEnv: ['OPENAI_API_KEY']
 ---
 
 OpenAI (<a href="https://openai.com/">https://openai.com/</a>) provides APIs for generating text and images.

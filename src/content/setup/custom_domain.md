@@ -1,6 +1,6 @@
 ---
-title: "Custom domain configuration"
-needsEnv: ["PROD"]
+title: 'Custom domain configuration'
+needsEnv: ['PROD']
 ---
 
 Note that a custom domain is required for making PropelAuth work with Safari.

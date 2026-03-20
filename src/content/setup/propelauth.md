@@ -1,6 +1,6 @@
 ---
-title: "User authentication with PropelAuth"
-needsEnv: ["PUBLIC_AUTH_URL", "PROPELAUTH_VERIFIER_KEY", "PROPELAUTH_API_KEY"]
+title: 'User authentication with PropelAuth'
+needsEnv: ['PUBLIC_AUTH_URL', 'PROPELAUTH_VERIFIER_KEY', 'PROPELAUTH_API_KEY']
 ---
 
 PropelAuth (<a href="https://propelauth.com" >https://propelauth.com</a>) provides end-to-end managed user authentication. PropelAuth is a great fit for the B2B SaaS Kit because it ships with organization management features, enabling your users to create teams and manage membership.
