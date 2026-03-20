@@ -1,7 +1,6 @@
 import react from '@astrojs/react';
 import vercel from '@astrojs/vercel';
 import { defineConfig } from 'astro/config';
-import varlockAstroIntegration from '@varlock/astro-integration';
 import checker from 'vite-plugin-checker';
 
 const shouldSkipEnvValidation =
@@ -10,8 +9,17 @@ const shouldSkipEnvValidation =
 	process.env.SKIP_ENV_VALIDATION !== '0';
 
 // https://astro.build/config
+const varlockAstroIntegration = shouldSkipEnvValidation
+	? undefined
+	: (await import('@varlock/astro-integration')).default;
+
+const integrations = [react()];
+if (varlockAstroIntegration) {
+	integrations.push(varlockAstroIntegration());
+}
+
 export default defineConfig({
-	integrations: [react(), !shouldSkipEnvValidation && varlockAstroIntegration()].filter(Boolean),
+	integrations,
 	adapter: vercel({}),
 	site: process.env.SITE_URL,
 	vite: {
