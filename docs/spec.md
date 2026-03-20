@@ -63,17 +63,20 @@ Astro file routing lives in `src/pages`.
 There are four broad route groups:
 
 1. Marketing/public pages
+
    - `src/pages/index.astro`
    - `src/pages/faq.astro`
    - `src/pages/prompts/*`
    - `src/pages/survey/[...path].astro`
 
 2. Auth entry pages
+
    - `src/pages/login.astro`
    - `src/pages/login-passwordless.astro`
    - `src/pages/signup.astro`
 
 3. Authenticated app shells
+
    - `src/pages/app/index.astro`
    - `src/pages/app/prompts.astro`
    - `src/pages/app/prompts/[id].astro`
