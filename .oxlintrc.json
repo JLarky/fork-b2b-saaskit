@@ -1,0 +1,15 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"ignorePatterns": [
+		".astro",
+		"src/.astro",
+		"dist",
+		".vscode",
+		".vercel",
+		"src/db/migrations",
+		"src/env.d.ts"
+	],
+	"options": {
+		"reportUnusedDisableDirectives": "error"
+	}
+}

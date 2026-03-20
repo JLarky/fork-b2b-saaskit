@@ -89,7 +89,9 @@ for (const slug of checksOrder) {
 			const open = hash || localStorage.getItem(ls_key);
 			const el =
 				open && document.querySelector(`setup-step[data-id="${open}"] input[type="checkbox"]`);
-			el instanceof HTMLInputElement && (el.checked = true);
+			if (el instanceof HTMLInputElement) {
+				el.checked = true;
+			}
 		}
 	</script>
 </Layout>

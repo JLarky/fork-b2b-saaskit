@@ -40,7 +40,7 @@ B2B companies are fairly common - for example, over 40% of <a href="https://www.
 
 [Prettier](https://prettier.io/)
 
-[ESLint](https://eslint.org/)
+[Oxlint](https://oxc.rs/docs/guide/usage/linter.html)
 
 [GitHub](https://github.com)
 
