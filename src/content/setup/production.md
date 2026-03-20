@@ -50,7 +50,6 @@ Note that the Supabase free tier has a limit of 2 projects.
 1. Locate "Authorized redirect URIs", this URL is going to be used in the next step.
 
 1. Open <a href="https://github.com/settings/developers">https://github.com/settings/developers</a>, click on "New OAuth App", and fill in the form:
-
    - "Application name" - "Prompts with Friends"
    - "Homepage URL" - `https://[subdomain].vercel.app`
    - "Authorization callback URL" - paste the value from the previous step
@@ -92,14 +91,12 @@ Note that the Supabase free tier has a limit of 2 projects.
 #### Publish to GitHub, deploy to Vercel
 
 1. Publish your project to GitHub
-
    - Create a new project on GitHub, copy the new URL
    - Change our origin URL to yours with `git remote set-url origin NEW_URL`
    - Add and commit your changes (if any) with `git add . && git commit -m "my updates"`
    - Push to GitHub with `git push -u origin main`
 
 2. Link your GitHub project to Vercel
-
    - See https://vercel.com/docs/concepts/deployments/git/vercel-for-github
 
 3. Note that if your Vercel subdomain ended up being different from the one used in the 2nd step of PropelAuth settings above, make sure to update "Primary Frontend Location" in PropelAuth to your actual Vercel subdomain

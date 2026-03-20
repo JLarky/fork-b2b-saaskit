@@ -776,10 +776,7 @@ const InProgress = ({ show }: { show: boolean }) => {
 		<>
 			<style>{gradient}</style>
 			{show && (
-				<div
-					className="fixed inset-0 bottom-auto
-				h-2 animate-[gradient_3s_ease_infinite] bg-gradient-to-r from-red-500 to-blue-500 bg-[length:200%_200%]"
-				></div>
+				<div className="fixed inset-0 bottom-auto h-2 animate-[gradient_3s_ease_infinite] bg-gradient-to-r from-red-500 to-blue-500 bg-[length:200%_200%]"></div>
 			)}
 		</>
 	);

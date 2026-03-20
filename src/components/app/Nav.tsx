@@ -151,7 +151,7 @@ const getNavLinkClass =
 		clsx(
 			'text-gray-600 hover:text-gray-900',
 			'px-2 py-0.5',
-			'border rounded-full',
+			'rounded-full border',
 			className,
 			isPending ? 'animate-pulse' : '',
 			isActive || isPending ? 'border-gray-800' : 'border-transparent'

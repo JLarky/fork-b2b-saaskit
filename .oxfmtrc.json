@@ -1,0 +1,29 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 100,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "useTabs": true,
+  "trailingComma": "es5",
+  "sortPackageJson": false,
+  "sortTailwindcss": {
+    "config": "tailwind.config.cjs",
+    "functions": ["clsx"]
+  },
+  "ignorePatterns": ["/.astro", "dist", ".vscode", ".vercel", "src/db/meta/"],
+  "overrides": [
+    {
+      "files": ["**/*.json", "**/*.md", ".oxfmtrc.json"],
+      "options": {
+        "singleQuote": false,
+        "useTabs": false
+      }
+    },
+    {
+      "files": ["package.json"],
+      "options": {
+        "printWidth": 320
+      }
+    }
+  ]
+}

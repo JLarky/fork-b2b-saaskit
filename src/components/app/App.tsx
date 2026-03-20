@@ -42,7 +42,7 @@ export function App() {
 				<h1 className="text-center text-2xl font-bold">Please select an organization:</h1>
 				<div className="text-center">
 					<select
-						className="rounded px-4  py-2"
+						className="rounded px-4 py-2"
 						onChange={(e) => {
 							if (e.target.value === 'create_org') {
 								redirectToCreateOrgPage();
@@ -147,7 +147,7 @@ const AppWithOrg = () => {
 		if (!auth.user) {
 			return (
 				<div className="text-center">
-					<a className="rounded  bg-indigo-500 px-4 py-2 text-white" href="/login">
+					<a className="rounded bg-indigo-500 px-4 py-2 text-white" href="/login">
 						Sign up or Sign in
 					</a>
 				</div>
@@ -164,7 +164,7 @@ const AppWithOrg = () => {
 					<NavLink
 						to="/app/prompts"
 						className={({ isPending }) =>
-							clsx('rounded  px-4 py-2 text-white', isPending ? 'bg-indigo-600' : 'bg-indigo-500')
+							clsx('rounded px-4 py-2 text-white', isPending ? 'bg-indigo-600' : 'bg-indigo-500')
 						}
 					>
 						View prompts
@@ -190,8 +190,7 @@ const AppWithOrg = () => {
 				</div>
 				<div className="mt-4 text-center">
 					<button
-						className="rounded bg-indigo-500 px-4 py-2 text-white
-					transition-colors duration-200 hover:bg-indigo-600"
+						className="rounded bg-indigo-500 px-4 py-2 text-white transition-colors duration-200 hover:bg-indigo-600"
 						onClick={() => {
 							setAtom((x) => x + 1);
 						}}
