@@ -1,6 +1,6 @@
 ---
-title: "Product analytics with PostHog (optional)"
-needsEnv: ["PUBLIC_POSTHOG_KEY"]
+title: 'Product analytics with PostHog (optional)'
+needsEnv: ['PUBLIC_POSTHOG_KEY']
 ---
 
 PostHog (<a href="https://posthog.com/" >https://posthog.com/</a>) is an open-source product analytics platform that helps engineers understand user behavior.
