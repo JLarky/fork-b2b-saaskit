@@ -15,6 +15,7 @@
     "preview": "astro preview",
     "lint": "oxlint . --deny-warnings",
     "fmt": "prettier --experimental-cli --write --ignore-unknown .",
+    "fmt:check": "prettier --experimental-cli --check --ignore-unknown .",
     "fix": "yarn lint:fix; yarn fmt",
     "lint:fix": "oxlint . --fix",
     "migrate": "tsx src/db/scripts/migrate",
