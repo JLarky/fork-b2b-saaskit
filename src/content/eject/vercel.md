@@ -18,7 +18,6 @@ import { defineConfig } from 'astro/config';
 export default defineConfig({
 	integrations: [react()],
 -	adapter: vercel(),
-	// eslint-disable-next-line no-undef
 	site: process.env.SITE_URL,
 ```
 

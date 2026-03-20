@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { QueryClient, QueryClientProvider, useMutation, useQuery } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import wretch from 'wretch';

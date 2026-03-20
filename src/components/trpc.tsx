@@ -8,7 +8,6 @@ import superjson from 'superjson';
 import type { AppRouter } from '../lib/trpc/root';
 import { QueryProvider } from './client';
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const trpc = createTRPCReact<AppRouter>();
 
 export function TRPCProvider({

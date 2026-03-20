@@ -1,5 +1,5 @@
 ---
-title: Removing ESLint
+title: Removing Oxlint
 ---
 
 TODO

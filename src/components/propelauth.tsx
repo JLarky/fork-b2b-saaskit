@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import propel from '@propelauth/react';
 import * as propel2 from '@propelauth/react';
 import { useEffect } from 'react';
