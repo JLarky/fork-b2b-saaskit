@@ -1,5 +1,0 @@
----
-title: Removing ESLint
----
-
-TODO
