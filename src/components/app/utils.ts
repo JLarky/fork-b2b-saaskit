@@ -113,6 +113,6 @@ export const useNavigateToReturnUrl = () => {
 		}
 		console.log('navigating to ', returnUrl);
 		navigate(returnUrl);
-	// oxlint-disable-next-line react-hooks/exhaustive-deps
+		// oxlint-disable-next-line react-hooks/exhaustive-deps
 	}, [hasUser]);
 };

@@ -53,7 +53,7 @@ export function AuthSync() {
 				return;
 			}
 		}
-	// oxlint-disable-next-line react-hooks/exhaustive-deps
+		// oxlint-disable-next-line react-hooks/exhaustive-deps
 	}, [params.isLoggedIn, params.accessToken]);
 	return null;
 }

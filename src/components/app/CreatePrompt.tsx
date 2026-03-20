@@ -194,7 +194,7 @@ export const EditPromptControls = ({
 		if (n >= 0) {
 			setTitle?.(`Create a pro${'o'.repeat(n)}mpt`);
 		}
-	// oxlint-disable-next-line react-hooks/exhaustive-deps
+		// oxlint-disable-next-line react-hooks/exhaustive-deps
 	}, [len, initialLen]);
 
 	const templates = useMemo(() => {
