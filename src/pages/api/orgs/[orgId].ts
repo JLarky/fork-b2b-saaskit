@@ -2,7 +2,7 @@ import { handleError, initBaseAuth } from '@propelauth/node';
 import type { APIRoute } from 'astro';
 
 import { publicUserInfo } from '../../../lib/publicUserInfo';
-import { serverEnv } from '../../../t3-env';
+import { serverEnv } from '../../../env';
 
 export const prerender = false;
 

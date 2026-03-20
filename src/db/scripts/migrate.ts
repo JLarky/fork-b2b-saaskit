@@ -1,5 +1,6 @@
 // funny story: if you put this file to src/db/migrate.ts it will be running during
 // `drizzle-kit generate` but moving it to src/db/scripts seems to fix the issue
+import 'varlock/auto-load';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 
 import { dbFolder as migrationsFolder } from '../../../drizzle.config';

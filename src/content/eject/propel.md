@@ -10,5 +10,5 @@ High-level steps:
 
 - Remove dependencies with `yarn remove @propelauth/base-elements @propelauth/node @propelauth/react`
 - Remove PropelAuth-specific files, like `rm src/components/propelauth.ts src/lib/propelauth.ts`
-- Remove PropelAuth-specific environment variables from `src/t3-env.ts`
+- Remove PropelAuth-specific environment variables from `.env.schema`
 - _And replace it with something else_

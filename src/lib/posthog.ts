@@ -1,7 +1,7 @@
 import type { User } from '@propelauth/node';
 import { PostHog } from 'posthog-node';
 
-import { serverEnv } from '../t3-env';
+import { serverEnv } from '../env';
 
 type Session = {
 	sessionId: string;

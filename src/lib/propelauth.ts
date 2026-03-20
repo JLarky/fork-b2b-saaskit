@@ -1,6 +1,6 @@
 import { initBaseAuth } from '@propelauth/node';
 
-import { serverEnv } from '../t3-env';
+import { serverEnv } from '../env';
 
 export const propelauth = initBaseAuth({
 	authUrl: serverEnv.PUBLIC_AUTH_URL,

@@ -1,4 +1,4 @@
-import type { ClientEnv } from './t3-env';
+import type { ClientEnv } from './env';
 
 // use clientEnv for client-only code so that you don't ship zod dependency to the client
 // vite only supports string values in import.meta.env

@@ -7,7 +7,7 @@ import { z } from 'zod';
 import type { PrivacyLevel } from '../../../components/app/utils';
 import { db } from '../../../db/db';
 import { gptKeys, promptLikes, prompts, sharedKeyRatelimit } from '../../../db/schema';
-import { serverEnv } from '../../../t3-env';
+import { serverEnv } from '../../../env';
 import { trackEvent } from '../../posthog';
 import { propelauth } from '../../propelauth';
 import { usersToPublicUserInfo } from '../../publicUserInfo';

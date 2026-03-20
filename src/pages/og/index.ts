@@ -7,6 +7,7 @@ import type { APIRoute } from 'astro';
 import satori from 'satori';
 
 import { websiteDescription, websiteTitle } from '../../constants';
+import { serverEnv } from '../../env';
 import { getFont } from './_getFonts';
 import OpenGraph from './_openGraph';
 import OpenGraphPrompt from './_openGraphPrompt';
@@ -45,7 +46,7 @@ export const GET: APIRoute = async (request) => {
 				//
 				{ name: 'Montserrat', data: Montserrat[600], weight: 600 },
 			],
-			debug: import.meta.env.DEBUG_OG === 'true',
+			debug: serverEnv.DEBUG_OG === true || serverEnv.DEBUG_OG === 'true',
 		}
 	);
 

@@ -2,7 +2,7 @@ import { handleError, initBaseAuth } from '@propelauth/node';
 import type { APIRoute } from 'astro';
 import jsonwebtoken from 'jsonwebtoken';
 
-import { serverEnv } from '../../t3-env';
+import { serverEnv } from '../../env';
 import type { FogbenderTokenResponse } from '../../types/types';
 
 export const prerender = false;
