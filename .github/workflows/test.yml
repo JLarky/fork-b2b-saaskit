@@ -16,6 +16,37 @@ jobs:
           message-failure: |
             Uh oh! Tests failed. Run `yarn test` locally to reproduce.
 
+  test-db:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        ports:
+          - 54322:5432
+        options: >-
+          --health-cmd "pg_isready -U testuser -d testdb"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout actions
+        uses: actions/checkout@v3
+      - name: Prepare actions
+        uses: ./.github/actions/prepare
+      - name: Database integration tests
+        run: yarn test:db
+        env:
+          TEST_DATABASE_URL: postgres://testuser:testpass@localhost:54322/testdb
+      - uses: mshick/add-pr-comment@v2
+        if: failure()
+        with:
+          message-failure: |
+            Uh oh! Database integration tests failed. Run `yarn test:db:up && yarn test:db` locally to reproduce.
+
 name: Test
 
 on:
