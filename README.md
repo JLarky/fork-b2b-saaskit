@@ -86,6 +86,28 @@ Please refer to section `9. Production deployment to Vercel` of the [setup guide
 
 # Working with the codebase
 
+### Validate the database layer locally
+
+If you want a lightweight check that the Drizzle/Postgres layer still works without connecting to Supabase or installing the Supabase CLI, use the local Docker-backed Postgres fixture:
+
+```sh
+yarn db:local:up
+yarn test:db:local
+```
+
+What this does:
+
+- starts a local Postgres container on `127.0.0.1:54322`
+- creates the `service_role` database role so the existing Supabase-flavoured RLS migration SQL still applies cleanly
+- runs the existing Drizzle migrations against that local database
+- executes a smoke test that performs a real insert/update/read cycle through the shared Drizzle database layer
+
+When you're done, you can tear the container down with:
+
+```sh
+yarn db:local:down
+```
+
 ### DB migrations with Drizzle ORM
 
 We're using Drizzle ORM to manage database migrations in B2B SaaS Kit. For details on Drizzle, see https://orm.drizzle.team/kit-docs/overview.
