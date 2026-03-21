@@ -1,10 +1,8 @@
 ---
-import { TRPCError } from '@trpc/server';
-import { getHTTPStatusCodeFromError } from '@trpc/server/http';
-
 import AppLayout from '../../../components/app/AppLayout.astro';
 import { Root } from '../../../components/app/Root';
-import { createHelpers } from '../../../lib/trpc/root';
+import { type ApiError,errorToHttpStatus } from '../../../lib/api/errors';
+import { createHelpers } from '../../../lib/api/router';
 
 export const prerender = false; // to allow dynamic title per user
 
@@ -15,9 +13,9 @@ const error = await helpers.prompts.getPrompts
 	.then(() => {})
 	.catch((error) => error);
 
-if (error instanceof TRPCError) {
-	const httpCode = getHTTPStatusCodeFromError(error);
-	// show error page or redirect instead of rendering the page
+if (error && typeof error === 'object' && '_tag' in error) {
+	const apiError = error as ApiError;
+	const httpCode = errorToHttpStatus(apiError);
 	if (httpCode === 401) {
 		return Astro.redirect('/login');
 	} else {

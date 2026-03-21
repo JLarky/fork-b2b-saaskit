@@ -1,11 +1,17 @@
 import type { QueryStatus } from '@tanstack/react-query';
-import type { TRPC_ERROR_CODE_KEY } from '@trpc/server/rpc';
 import { useEffect, useState } from 'react';
 
 import { Layout } from './Layout';
 
-export function usePromptErrorPage(status: QueryStatus, errorCode?: TRPC_ERROR_CODE_KEY) {
-	// to make error message sticky when react query tries to refetch
+export type ApiErrorCode =
+	| 'UNAUTHORIZED'
+	| 'FORBIDDEN'
+	| 'NOT_FOUND'
+	| 'BAD_REQUEST'
+	| 'TOO_MANY_REQUESTS'
+	| 'INTERNAL_SERVER_ERROR';
+
+export function usePromptErrorPage(status: QueryStatus, errorCode?: ApiErrorCode) {
 	const [stickyErrorCode, setStickyErrorCode] = useState(errorCode);
 	useEffect(() => {
 		if (errorCode) {

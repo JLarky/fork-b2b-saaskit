@@ -1,14 +1,14 @@
 import { useParams } from 'react-router-dom';
 
 import { websiteTitle } from '../../constants';
-import { trpc } from '../trpc';
+import { api } from '../api';
 import { EditPromptControls } from './CreatePrompt';
 import { Layout } from './Layout';
 import { usePromptErrorPage } from './usePromptErrorPage';
 
 export function EditPrompt() {
 	const { promptId } = useParams<{ promptId: string }>();
-	const promptsQuery = trpc.prompts.getPrompt.useQuery(
+	const promptsQuery = api.prompts.getPrompt.useQuery(
 		{
 			promptId: promptId!,
 		},
@@ -21,7 +21,7 @@ export function EditPrompt() {
 		}
 	);
 
-	const errorPage = usePromptErrorPage(promptsQuery.status, promptsQuery.error?.data?.code);
+	const errorPage = usePromptErrorPage(promptsQuery.status, promptsQuery.error?.data?.code as never);
 
 	if (errorPage) {
 		return errorPage;
@@ -38,7 +38,7 @@ export function EditPrompt() {
 					promptName={data.prompt.title}
 					promptDescription={data.prompt.description}
 					promptTags={data.prompt.tags}
-					promptPrivacyLevel={data.prompt.privacyLevel}
+					promptPrivacyLevel={data.prompt.privacyLevel as 'public' | 'team' | 'unlisted' | 'private'}
 					template={data.prompt.template}
 				/>
 			)}

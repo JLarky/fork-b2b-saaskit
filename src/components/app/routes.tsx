@@ -3,11 +3,11 @@ import { useAtomValue } from 'jotai';
 import { Outlet, type RouteObject } from 'react-router-dom';
 
 import { env } from '../../config';
-import type { Helpers } from '../../lib/trpc/root';
+import type { Helpers } from '../../lib/api/router';
+import type { ApiUtils } from '../api';
 import { AuthSync } from '../AuthSync';
 import { FullPageSupport, SupportWidget } from '../fogbender/Support';
 import { AuthProvider } from '../propelauth';
-import type { RouterUtils } from '../trpc';
 import { App } from './App';
 import { CreatePrompt } from './CreatePrompt';
 import { EditPrompt } from './EditPrompt';
@@ -23,9 +23,7 @@ export const routes: RemixBrowserContext & RouteObject[] = [
 		loader: async ({ params }) => {
 			const promptId = params.promptId;
 			if (promptId) {
-				// pre-fetch in SSR is done oustide of the loader in .astro file
-				// pre-fetch in browser
-				await routes.trpcUtils?.prompts.getPrompt.ensureData({ promptId }).catch(() => {});
+				await routes.apiUtils?.prompts.getPrompt.ensureData({ promptId }).catch(() => {});
 			}
 			return null;
 		},
@@ -56,10 +54,8 @@ export const routes: RemixBrowserContext & RouteObject[] = [
 			{
 				path: '/app/prompts',
 				loader: async ({ context }) => {
-					// pre-fetch in SSR
 					await context?.helpers.prompts.getPrompts.prefetch({});
-					// pre-fetch in browser
-					await routes.trpcUtils?.prompts.getPrompts.ensureData({}).catch(() => {});
+					await routes.apiUtils?.prompts.getPrompts.ensureData({}).catch(() => {});
 					return null;
 				},
 				Component() {
@@ -71,10 +67,8 @@ export const routes: RemixBrowserContext & RouteObject[] = [
 				loader: async ({ context, params }) => {
 					const promptId = params.promptId;
 					if (promptId) {
-						// pre-fetch in SSR
 						await context?.helpers.prompts.getPrompt.prefetch({ promptId });
-						// pre-fetch in browser
-						await routes.trpcUtils?.prompts.getPrompt.ensureData({ promptId }).catch(() => {});
+						await routes.apiUtils?.prompts.getPrompt.ensureData({ promptId }).catch(() => {});
 					}
 					return null;
 				},
@@ -110,13 +104,11 @@ export const routes: RemixBrowserContext & RouteObject[] = [
 	},
 ];
 
-// browser-only context
 export type RemixBrowserContext = {
-	trpcUtils?: RouterUtils;
+	apiUtils?: ApiUtils;
 	queryClient?: QueryClient;
 };
 
-// server only context
 export type RemixContext = {
 	helpers: Helpers;
 };

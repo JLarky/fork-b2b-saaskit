@@ -1,22 +1,21 @@
 import type { UseAuthInfoLoggedInProps } from '@propelauth/react/types/useAuthInfo';
 import { useQueryClient } from '@tanstack/react-query';
-import { getQueryKey } from '@trpc/react-query';
 import clsx from 'clsx';
 import { useReducer, useState } from 'react';
 
 import { env } from '../../config';
 import { websiteTitle } from '../../constants';
+import { api } from '../api';
 import { apiServer, useMutation } from '../client';
 import { useRequireActiveOrg } from '../propelauth';
 import { useAuthInfo } from '../propelauth';
-import { trpc } from '../trpc';
 import { Layout } from './Layout';
 
 export function Settings() {
 	const { activeOrg } = useRequireActiveOrg();
 	const orgId = activeOrg?.orgId;
 
-	const keysQuery = trpc.settings.getKeys.useQuery(
+	const keysQuery = api.settings.getKeys.useQuery(
 		{ orgId: orgId || '' },
 		{
 			enabled: !!orgId,
@@ -24,7 +23,7 @@ export function Settings() {
 		}
 	);
 
-	const { data: subscriptions } = trpc.settings.getSubscriptions.useQuery(
+	const { data: subscriptions } = api.settings.getSubscriptions.useQuery(
 		{ orgId: orgId || '' },
 		{
 			enabled: !!orgId,
@@ -32,7 +31,7 @@ export function Settings() {
 		}
 	);
 
-	const { data: stripeConfigured } = trpc.settings.stripeConfigured.useQuery(
+	const { data: stripeConfigured } = api.settings.stripeConfigured.useQuery(
 		{},
 		{
 			enabled: !!orgId,
@@ -41,20 +40,20 @@ export function Settings() {
 	);
 
 	const queryClient = useQueryClient();
-	const addKeyMutation = trpc.settings.createKey.useMutation({
+	const addKeyMutation = api.settings.createKey.useMutation({
 		onSettled: () => {
-			queryClient.invalidateQueries(getQueryKey(trpc.settings.getKeys));
+			queryClient.invalidateQueries(api.settings.getKeys.queryKey());
 		},
 	});
-	const deleteKeyMutation = trpc.settings.deleteKey.useMutation({
+	const deleteKeyMutation = api.settings.deleteKey.useMutation({
 		onSuccess: (data) => {
 			queryClient.setQueryData(
-				getQueryKey(trpc.settings.getKeys, undefined, 'query'),
+				api.settings.getKeys.queryKey(),
 				(oldData: typeof keysQuery.data) => oldData?.filter((item) => item.keyId !== data.keyId)
 			);
 		},
 		onSettled: () => {
-			queryClient.invalidateQueries(getQueryKey(trpc.settings.getKeys));
+			queryClient.invalidateQueries(api.settings.getKeys.queryKey());
 		},
 	});
 
@@ -132,7 +131,7 @@ export function Settings() {
 									e.preventDefault();
 									const form = e.currentTarget;
 									const formData = new FormData(form);
-									addKeyMutation.mutate(Object.fromEntries(formData) as any, {
+									addKeyMutation.mutate(Object.fromEntries(formData) as never, {
 										onSuccess: () => {
 											form.reset();
 										},
@@ -187,9 +186,9 @@ export function Settings() {
 								{addKeyMutation.isError && (
 									<div>
 										Error!{' '}
-										{addKeyMutation.error.data?.zodError && (
+										{addKeyMutation.error.data?.zodError ? (
 											<pre>{JSON.stringify(addKeyMutation.error.data.zodError, null, 2)}</pre>
-										)}
+										) : null}
 									</div>
 								)}
 							</form>

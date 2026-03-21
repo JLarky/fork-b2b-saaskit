@@ -1,6 +1,6 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
-import { createHelpers } from '../../../lib/trpc/root';
+import { createHelpers } from '../../../lib/api/router';
 
 export const prerender = false; // to allow dynamic title per user
 
@@ -11,6 +11,6 @@ const title = `Create Helpers / ${helpersExample}`;
 ---
 
 <Layout title={title}>
-	I can get some information right from the trpc, for example to set a title.
+	I can get some information right from the API, for example to set a title.
 	<h1 class="mt-4 text-2xl font-bold">{title}</h1>
 </Layout>

@@ -2,45 +2,40 @@ import clsx from 'clsx';
 import { Link } from 'react-router-dom';
 
 import { websiteTitle } from '../../constants';
+import { api, useApiUtils } from '../api';
 import { useRequireActiveOrg } from '../propelauth';
-import { trpc } from '../trpc';
 import { Layout } from './Layout';
 
 export function Prompts() {
-	const trpcUtils = trpc.useContext();
+	const apiUtils = useApiUtils();
 
 	const { auth, activeOrg } = useRequireActiveOrg();
 	const userId = auth.loading === false && auth.user?.userId;
 	const orgId = activeOrg?.orgId || '';
-	const promptsQuery = trpc.prompts.getPrompts.useQuery(
+	const promptsQuery = api.prompts.getPrompts.useQuery(
 		{},
 		{
 			enabled: !!orgId,
 			staleTime: 1000,
 		}
 	);
-	const deletePromptMutation = trpc.prompts.deletePrompt.useMutation({
+	const deletePromptMutation = api.prompts.deletePrompt.useMutation({
 		onMutate: async ({ promptId }) => {
-			// cancel any outgoing refetches (so they don't overwrite our optimistic update)
-			await trpcUtils.prompts.getPrompts.cancel({});
-			// snapshot the previous value
-			const previousPrompts = trpcUtils.prompts.getPrompts.getData({});
-			// optimistically update to the new value
-			trpcUtils.prompts.getPrompts.setData({}, (oldData) =>
+			await apiUtils.prompts.getPrompts.cancel({});
+			const previousPrompts = apiUtils.prompts.getPrompts.getData({});
+			apiUtils.prompts.getPrompts.setData({}, (oldData) =>
 				oldData?.filter((prompt) => prompt.promptId !== promptId)
 			);
-			// return a context object with the snapshotted value
 			return { previousPrompts };
 		},
-		// if the mutation fails, use the context returned from onMutate to roll back
 		onError: (_err, _variables, context) => {
-			if (context?.previousPrompts) {
-				trpcUtils.prompts.getPrompts.setData({}, context.previousPrompts);
+			const ctx = context as { previousPrompts?: typeof promptsQuery.data } | undefined;
+			if (ctx?.previousPrompts) {
+				apiUtils.prompts.getPrompts.setData({}, ctx.previousPrompts);
 			}
 		},
-		// always refetch after error or success:
 		onSettled: () => {
-			trpcUtils.prompts.getPrompts.invalidate({});
+			apiUtils.prompts.getPrompts.invalidate({});
 		},
 	});
 

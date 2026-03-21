@@ -1,12 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { getQueryKey } from '@trpc/react-query';
 import clsx from 'clsx';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { websiteTitle } from '../../constants';
+import { api } from '../api';
 import { useRequireActiveOrg } from '../propelauth';
-import { trpc } from '../trpc';
 import { Layout } from './Layout';
 import { CopyToClipboardBtn, JsonSnippet } from './Prompt';
 import {
@@ -169,7 +168,7 @@ export const EditPromptControls = ({
 	setTitle,
 	setHasEdits,
 }: {
-	promptId?: string; // if present, edit existing prompt
+	promptId?: string;
 	promptName?: string;
 	promptDescription?: string;
 	promptTags?: string[];
@@ -201,9 +200,9 @@ export const EditPromptControls = ({
 		return detectTemplates(messages);
 	}, [messages]);
 
-	const runPromptMutation = trpc.prompts.runPrompt.useMutation({
+	const runPromptMutation = api.prompts.runPrompt.useMutation({
 		onSettled: () => {
-			queryClient.invalidateQueries(getQueryKey(trpc.prompts.getDefaultKey));
+			queryClient.invalidateQueries(api.prompts.getDefaultKey.queryKey());
 		},
 	});
 
@@ -214,7 +213,7 @@ export const EditPromptControls = ({
 			},
 			{
 				onSuccess(e) {
-					if (e.message) {
+					if ('message' in e && e.message) {
 						setMessages((messages) => [
 							...messages,
 							{
@@ -238,7 +237,7 @@ export const EditPromptControls = ({
 			},
 			{
 				onSuccess(e) {
-					if (e.message) {
+					if ('message' in e && e.message) {
 						setMessages((messages) => {
 							const newMessage = {
 								role: 'assistant',
@@ -263,18 +262,18 @@ export const EditPromptControls = ({
 
 	const navigate = useNavigate();
 
-	const addPromptMutation = trpc.prompts.createPrompt.useMutation({
+	const addPromptMutation = api.prompts.createPrompt.useMutation({
 		onSettled: () => {
-			queryClient.invalidateQueries(getQueryKey(trpc.prompts.getPrompts));
+			queryClient.invalidateQueries(api.prompts.getPrompts.queryKey());
 		},
 		onSuccess: (promptId) => {
 			navigate(`/app/prompts/${promptId}`);
 		},
 	});
 	const [saved, setSaved] = useState<string>();
-	const updatePromptMutation = trpc.prompts.updatePrompt.useMutation({
+	const updatePromptMutation = api.prompts.updatePrompt.useMutation({
 		onSettled: () => {
-			queryClient.invalidateQueries(getQueryKey(trpc.prompts.getPrompts));
+			queryClient.invalidateQueries(api.prompts.getPrompts.queryKey());
 		},
 		onSuccess: (promptId) => {
 			setSaved(promptId);
@@ -284,12 +283,12 @@ export const EditPromptControls = ({
 
 	const promptIsBeingSaved = addPromptMutation.isLoading || updatePromptMutation.isLoading;
 
-	const deletePromptMutation = trpc.prompts.deletePrompt.useMutation({
+	const deletePromptMutation = api.prompts.deletePrompt.useMutation({
 		onSuccess: () => {
 			navigate(`/app/prompts`);
 		},
 		onSettled: () => {
-			queryClient.invalidateQueries(getQueryKey(trpc.prompts.getPrompts));
+			queryClient.invalidateQueries(api.prompts.getPrompts.queryKey());
 		},
 	});
 
@@ -361,7 +360,7 @@ export const EditPromptControls = ({
 															const newMessages = structuredClone(messages);
 															const x = newMessages[index];
 															if (x) {
-																messageKeys.set(x, key); // to preserve key
+																messageKeys.set(x, key);
 																x.role = action;
 															}
 															return newMessages;
@@ -393,7 +392,7 @@ export const EditPromptControls = ({
 											const newMessages = structuredClone(messages);
 											const x = newMessages[index];
 											if (x) {
-												messageKeys.set(x, key); // to preserve the same key
+												messageKeys.set(x, key);
 												x.content = newText;
 											}
 											return newMessages;
@@ -505,8 +504,8 @@ export const EditPromptControls = ({
 							)}
 						</div>
 					)}
-					{runPromptMutation.data?.error && (
-						<div className="text-sm text-red-500">{runPromptMutation.data?.error}</div>
+					{runPromptMutation.data && 'error' in runPromptMutation.data && runPromptMutation.data.error && (
+						<div className="text-sm text-red-500">{runPromptMutation.data.error}</div>
 					)}
 				</div>
 				{templates.size > 0 && (
@@ -730,9 +729,9 @@ function onMount(el: HTMLTextAreaElement | null) {
 function useKeys() {
 	const { activeOrg } = useRequireActiveOrg();
 	const orgId = activeOrg?.orgId || '';
-	const keysQuery = trpc.settings.getKeys.useQuery({ orgId }, { enabled: !!orgId });
+	const keysQuery = api.settings.getKeys.useQuery({ orgId }, { enabled: !!orgId });
 	const hasKey = keysQuery.data === undefined ? undefined : (keysQuery.data?.length || 0) !== 0;
-	const defaultKeyQuery = trpc.prompts.getDefaultKey.useQuery(undefined, {
+	const defaultKeyQuery = api.prompts.getDefaultKey.useQuery(undefined as never, {
 		enabled: !!orgId && keysQuery.isSuccess && !hasKey,
 	});
 
@@ -748,7 +747,7 @@ function useKeys() {
 function useSubscriptions() {
 	const { activeOrg } = useRequireActiveOrg();
 	const orgId = activeOrg?.orgId || '';
-	const { data: subscriptions } = trpc.settings.getSubscriptions.useQuery(
+	const { data: subscriptions } = api.settings.getSubscriptions.useQuery(
 		{ orgId },
 		{ enabled: !!orgId }
 	);

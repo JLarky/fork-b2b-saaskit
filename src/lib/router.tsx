@@ -2,13 +2,12 @@ import type { AstroGlobal } from 'astro';
 import { createStaticHandler } from 'react-router-dom/server';
 
 import { type RemixContext, routes } from '../components/app/routes';
-import { createHelpers } from './trpc/root';
+import { createHelpers } from './api/router';
 
 export const handler = createStaticHandler(routes);
 
 export async function createRouterContext(astro: AstroGlobal) {
 	const helpers = createHelpers(astro);
-	// Astro doesn't have trailing slash in dev, but has it prod :(
 	const newUrl = astro.request.url.replace(/\/$/, '') || '/';
 	const newReq = new Request(newUrl, astro.request);
 	const contextOrResponse = await handler.query(newReq, {

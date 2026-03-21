@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { websiteTitle } from '../../constants';
-import type { PromptPrivacyLevel } from '../../lib/trpc/routers/prompts';
-import { type RouterOutput, trpc } from '../trpc';
+import type { PromptPrivacyLevel } from '../../lib/api/procedures/prompts';
+import { api, type GetPromptOutput, useApiUtils } from '../api';
 import { Layout } from './Layout';
 import { usePromptErrorPage } from './usePromptErrorPage';
 import { type Message, resolveTemplates, useRedirectToLoginPage } from './utils';
@@ -13,8 +13,8 @@ export function Prompt() {
 	const navigate = useNavigate();
 	const { redirectToLogin } = useRedirectToLoginPage();
 	const { promptId } = useParams<{ promptId: string }>();
-	const trpcUtils = trpc.useContext();
-	const promptQuery = trpc.prompts.getPrompt.useQuery(
+	const apiUtils = useApiUtils();
+	const promptQuery = api.prompts.getPrompt.useQuery(
 		{
 			promptId: promptId!,
 		},
@@ -27,18 +27,18 @@ export function Prompt() {
 		}
 	);
 
-	const likeMutation = trpc.prompts.likePrompt.useMutation({
+	const likeMutation = api.prompts.likePrompt.useMutation({
 		onError: (error) => {
 			if (error.data?.code === 'UNAUTHORIZED') {
 				redirectToLogin(window.location.pathname);
 			}
 		},
 		onSettled: () => {
-			trpcUtils?.prompts.getPrompt.invalidate({ promptId });
+			apiUtils.prompts.getPrompt.invalidate({ promptId: promptId! });
 		},
 	});
 
-	const errorPage = usePromptErrorPage(promptQuery.status, promptQuery.error?.data?.code);
+	const errorPage = usePromptErrorPage(promptQuery.status, promptQuery.error?.data?.code as never);
 
 	if (errorPage) {
 		return errorPage;
@@ -57,7 +57,7 @@ export function Prompt() {
 						<button
 							onClick={() => {
 								likeMutation.mutate({ promptId, unlike: data?.myLike });
-								trpcUtils.prompts.getPrompt.setData({ promptId }, (data) => {
+								apiUtils.prompts.getPrompt.setData({ promptId }, (data) => {
 									if (!data) {
 										return data;
 									}
@@ -259,7 +259,6 @@ const SimpleModalButton = ({
 			focusRef.current = document.activeElement;
 			document.body.style.overflow = 'hidden';
 		} else {
-			// try to restore focus to the last focused element
 			focus(focusRef.current);
 			document.body.style.overflow = 'unset';
 		}
@@ -269,18 +268,15 @@ const SimpleModalButton = ({
 			}
 			const isTabPressed = e.key === 'Tab';
 			if (isTabPressed) {
-				// add all the elements inside modal which you want to make focusable
 				const focusableElements =
 					'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 				const focusableContent = modalRef.current?.querySelectorAll(focusableElements);
 				if (e.shiftKey) {
-					// shift + tab wraps focus to end if you're on first element
 					if (document.activeElement === focusableContent?.[0]) {
 						e.preventDefault();
 						focus(focusableContent?.[focusableContent.length - 1]);
 					}
 				} else {
-					// tab wraps focus to start if you're on last element
 					if (document.activeElement === focusableContent?.[focusableContent.length - 1]) {
 						e.preventDefault();
 						focus(focusableContent?.[0]);
@@ -330,12 +326,12 @@ const SimpleModalButton = ({
 	);
 };
 
-const ShareDialog = ({ response }: { response: RouterOutput['prompts']['getPrompt'] }) => {
+const ShareDialog = ({ response }: { response: GetPromptOutput }) => {
 	const promptData = response.prompt;
-	const trpcUtils = trpc.useContext();
-	const updatePromptMutation = trpc.prompts.updatePrompt.useMutation({
+	const apiUtils = useApiUtils();
+	const updatePromptMutation = api.prompts.updatePrompt.useMutation({
 		onSettled: async () => {
-			await trpcUtils.prompts.getPrompt.invalidate({ promptId: promptData.promptId });
+			await apiUtils.prompts.getPrompt.invalidate({ promptId: promptData.promptId });
 		},
 	});
 	const privacyLevel = updatePromptMutation.variables?.privacyLevel || promptData.privacyLevel;

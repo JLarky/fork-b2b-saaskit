@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 
-import { createCaller } from '../../../lib/trpc/root';
+import { createCaller } from '../../../lib/api/router';
 
 export const prerender = false; // to allow dynamic title per user
 
@@ -14,7 +14,7 @@ export const ALL: APIRoute = async ({ request }) => {
 	const title = `Create Caller / ${callerExample}`;
 	return new Response(
 		JSON.stringify({
-			what: 'I can even use tRPC from API endpoints, maybe in case you need to have some third-party public API',
+			what: 'I can even use the API from API endpoints, maybe in case you need to have some third-party public API',
 			title,
 		}),
 		{

@@ -1,7 +1,7 @@
 import type { DehydratedState } from '@tanstack/react-query';
 import type { StaticHandlerContext } from 'react-router-dom/server';
 
-import { TRPCProvider } from '../trpc';
+import { ApiProvider } from '../api';
 import { BrowserRouter } from './BrowserRouter';
 import { ServerRouter } from './ServerRouter';
 
@@ -11,15 +11,15 @@ export function Root(props: {
 }) {
 	if (import.meta.env.SSR) {
 		return (
-			<TRPCProvider dehydratedState={props.dehydratedState}>
+			<ApiProvider dehydratedState={props.dehydratedState}>
 				<ServerRouter {...props} />
-			</TRPCProvider>
+			</ApiProvider>
 		);
 	} else {
 		return (
-			<TRPCProvider dehydratedState={props.dehydratedState}>
+			<ApiProvider dehydratedState={props.dehydratedState}>
 				<BrowserRouter />
-			</TRPCProvider>
+			</ApiProvider>
 		);
 	}
 }

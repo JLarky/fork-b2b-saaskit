@@ -1,8 +1,8 @@
 import { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import type { GetPromptOutput } from '../api';
 import { useAuthInfo } from '../propelauth';
-import type { RouterOutput } from '../trpc';
 
 export type Message = { role: 'user' | 'assistant' | 'system'; content: string };
 
@@ -55,7 +55,7 @@ export function defaultPrivacyLevel(value: string | undefined): PrivacyLevel {
 
 export type PrivacyLevel = 'public' | 'team' | 'unlisted' | 'private';
 
-export type PromptState = { prompt?: RouterOutput['prompts']['getPrompt']['prompt'] } | null;
+export type PromptState = { prompt?: GetPromptOutput['prompt'] } | null;
 
 export const useRedirectToLoginPage = () => {
 	const redirectToLogin = useCallback((returnUrl: string) => {

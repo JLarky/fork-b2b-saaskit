@@ -9,7 +9,7 @@ import {
 	useSearchParams,
 } from 'react-router-dom';
 
-import { trpc, TRPCProvider } from '../trpc';
+import { api, ApiProvider } from '../api';
 
 const routes = () => [
 	{
@@ -23,9 +23,9 @@ const routes = () => [
 	{
 		path: '/survey/optional-comments',
 		element: (
-			<TRPCProvider>
+			<ApiProvider>
 				<OptionalComments />
-			</TRPCProvider>
+			</ApiProvider>
 		),
 	},
 	{
@@ -35,9 +35,9 @@ const routes = () => [
 	{
 		path: '/survey/published',
 		element: (
-			<TRPCProvider>
+			<ApiProvider>
 				<Published />
-			</TRPCProvider>
+			</ApiProvider>
 		),
 	},
 ];
@@ -134,7 +134,7 @@ function OptionalComments() {
 	const [search] = useSearchParams();
 	const rating = search.get('rating') || '';
 	const validRating = validateRating(rating);
-	const postSurveyMutation = trpc.surveys.postSurvey.useMutation();
+	const postSurveyMutation = api.surveys.postSurvey.useMutation();
 	if (validRating === undefined) {
 		return <Navigate to="/survey/rate-experience" />;
 	}
@@ -151,7 +151,7 @@ function OptionalComments() {
 					e.preventDefault();
 					const form = e.currentTarget;
 					const formData = Object.fromEntries(new FormData(form));
-					postSurveyMutation.mutate(formData as any);
+					postSurveyMutation.mutate(formData as never);
 				}}
 				className="w-full px-8 sm:w-96"
 			>
@@ -214,14 +214,6 @@ function ThankYou() {
 	);
 }
 
-/**
- * This is a custom hook that will wait for 350ms before returning `true`
- * This relies on the fact that Chrome will show the old page for almost
- * half a second before showing the new page. So showing completely blank
- * page (return null) will actually provide a better user experience
- * compared to showing loading spinner or a skeleton 🤯
- */
-
 function useWaited() {
 	const [waited, setWaited] = useState(false);
 	useEffect(() => {
@@ -233,7 +225,7 @@ function useWaited() {
 }
 
 function Published() {
-	const postSurveyMutation = trpc.surveys.getPublic.useQuery();
+	const postSurveyMutation = api.surveys.getPublic.useQuery(undefined as never);
 
 	const waited = useWaited();
 	if (!waited && postSurveyMutation.isLoading) {
