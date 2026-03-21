@@ -55,7 +55,7 @@ Notes:
 - Content/setup docs rendered by the app: `src/content/setup/`, `src/content/eject/`
 - Shared styles: `src/styles/tailwind.css`
 - Public assets: `public/`, `src/assets/`
-- Vitest tests: `src/**/*.test.ts`
+- Vitest tests: `src/**/*.test.ts` (Vitest sets `SKIP_ENV_VALIDATION=true` so imports do not require Doppler during unit tests.)
 
 ## Current Stack And Guardrails
 
@@ -72,6 +72,7 @@ Notes:
   - tRPC is the primary typed server/client API layer.
   - Main router is `appRouter` in `src/lib/trpc/root.ts`.
   - Server context and auth/org middleware live in `src/lib/trpc/trpc.ts`.
+  - Effect is introduced incrementally: `src/services/` defines `Context.Tag` services and `Layer` live implementations (for example `DatabaseLive`, `AuthLive` in `src/services/AuthLive.ts`, `PaymentsLive`, `AnalyticsLive`). Typed domain errors live in `src/errors.ts`. See `docs/specs/effect-migration.md` for the full plan.
 
 - Auth:
   - PropelAuth is the authentication provider.

@@ -1,76 +1,97 @@
-import { handleError, initBaseAuth } from '@propelauth/node';
+import { handleError } from '@propelauth/node';
 import type { APIRoute } from 'astro';
+import { Effect, Layer } from 'effect';
 
-import { getStripeConfig, openStripe } from '../../lib/stripe';
-import { serverEnv } from '../../t3-env';
+import { Auth } from '../../services/Auth';
+import { AuthLive } from '../../services/AuthLive';
+import { HttpRequest } from '../../services/HttpRequest';
+import { Payments, PaymentsLive } from '../../services/Payments';
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request }) => {
-	const propelauth = initBaseAuth({
-		authUrl: serverEnv.PUBLIC_AUTH_URL,
-		apiKey: serverEnv.PROPELAUTH_API_KEY,
-		manualTokenVerificationMetadata: {
-			verifierKey: serverEnv.PROPELAUTH_VERIFIER_KEY,
-			issuer: serverEnv.PUBLIC_AUTH_URL,
-		},
+const checkoutHandler = Effect.gen(function* () {
+	const auth = yield* Auth;
+	const payments = yield* Payments;
+	const { req } = yield* HttpRequest;
+
+	if (!payments) {
+		return yield* Effect.fail(new Error('Stripe secret key and price ID are not configured'));
+	}
+
+	const token = req.headers.get('Authorization');
+	if (!token) {
+		return yield* Effect.fail(new Error('No token'));
+	}
+
+	const { orgId } = yield* Effect.tryPromise({
+		try: () => req.json() as Promise<{ orgId?: string }>,
+		catch: () => new Error('Invalid JSON body'),
 	});
 
-	const token = request.headers.get('Authorization');
+	if (!orgId) {
+		return yield* Effect.fail(new Error('No orgId'));
+	}
 
-	try {
-		const stripeConfig = getStripeConfig();
-		if (!stripeConfig) {
-			throw new Error('Stripe secret key and price ID are not configured');
-		}
+	yield* Effect.tryPromise({
+		try: () => auth.validateAccessTokenAndGetUserWithOrgInfo(token, { orgId }),
+		catch: (e) => e as Error,
+	});
 
-		if (!token) {
-			throw new Error('No token');
-		}
+	const appUrl = new URL('/app/settings', req.url).toString();
 
-		const { orgId } = await request.json();
-
-		if (!orgId) {
-			throw new Error('No orgId');
-		}
-
-		// make sure we have access to org
-		await propelauth.validateAccessTokenAndGetUserWithOrgInfo(token, { orgId });
-
-		const stripe = openStripe(stripeConfig);
-		const appUrl = new URL('/app/settings', request.url).toString();
-		const session = await stripe.checkout.sessions.create({
-			client_reference_id: orgId,
-			line_items: [
-				{
-					price: stripeConfig.priceId,
-					quantity: 1,
+	const session = yield* Effect.tryPromise({
+		try: () =>
+			payments.stripe.checkout.sessions.create({
+				client_reference_id: orgId,
+				line_items: [
+					{
+						price: payments.priceId,
+						quantity: 1,
+					},
+				],
+				subscription_data: {
+					metadata: {
+						what: 'subscription_data',
+						orgId,
+					},
 				},
-			],
-			subscription_data: {
 				metadata: {
-					what: 'subscription_data',
+					what: 'checkout_session',
 					orgId,
 				},
-			},
-			metadata: {
-				what: 'checkout_session',
-				orgId,
-			},
-			mode: 'subscription',
-			success_url: appUrl,
-			cancel_url: appUrl,
-		});
+				mode: 'subscription',
+				success_url: appUrl,
+				cancel_url: appUrl,
+			}),
+		catch: (e) => e as Error,
+	});
 
-		const { url } = session;
+	const { url } = session;
 
-		if (!url) {
-			throw new Error('No checkout URL');
-		}
-
-		return new Response(JSON.stringify({ url }));
-	} catch (e) {
-		const err = handleError(e, { logError: true, returnDetailedErrorToUser: false });
-		return new Response(err.message, { status: err.status });
+	if (!url) {
+		return yield* Effect.fail(new Error('No checkout URL'));
 	}
+
+	return new Response(JSON.stringify({ url }));
+}).pipe(
+	Effect.catchAll((e) =>
+		Effect.sync(() => {
+			const err = handleError(e, { logError: true, returnDetailedErrorToUser: false });
+			return new Response(err.message, { status: err.status });
+		})
+	)
+);
+
+export const POST: APIRoute = async ({ request }) => {
+	return Effect.runPromise(
+		checkoutHandler.pipe(
+			Effect.provide(
+				Layer.mergeAll(
+					AuthLive,
+					PaymentsLive,
+					Layer.succeed(HttpRequest, { req: request, resHeaders: new Headers() })
+				)
+			)
+		)
+	);
 };
