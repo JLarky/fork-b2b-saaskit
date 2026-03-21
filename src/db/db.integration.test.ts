@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { surveys } from './schema';
 import { createTestDatabase } from './test-utils';
 
-describe('database (local Postgres)', () => {
+describe('database (PGlite in-process Postgres)', () => {
 	let ctx: Awaited<ReturnType<typeof createTestDatabase>>;
 
 	beforeAll(async () => {
@@ -12,7 +12,7 @@ describe('database (local Postgres)', () => {
 	});
 
 	afterAll(async () => {
-		await ctx.close();
+		await ctx?.close();
 	});
 
 	it('applies schema so surveys can be written and read', async () => {

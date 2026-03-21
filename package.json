@@ -11,9 +11,7 @@
     "full:check": "yarn fix && yarn ci:check && doppler run --config prd yarn build",
     "ci:check": "astro check && tsc --noEmit",
     "test": "vitest run",
-    "test:db": "docker compose up -d postgres-test --wait && vitest run --config vitest.integration.config.ts",
-    "db:test:up": "docker compose up -d postgres-test --wait",
-    "db:test:down": "docker compose down",
+    "test:db": "vitest run src/db/db.integration.test.ts",
     "test:watch": "vitest",
     "preview": "astro preview",
     "lint": "oxlint . --deny-warnings",
@@ -69,6 +67,7 @@
     "wretch": "^2.5.2"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.4.1",
     "@tailwindcss/typography": "^0.5.9",
     "eslint-plugin-astro": "^1.2.3",
     "eslint-plugin-simple-import-sort": "^12.1.1",
