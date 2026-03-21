@@ -1,0 +1,4 @@
+- **Technical Notes:** See [docs/tech.md](docs/tech.md)
+- **Environment Notes:** See [docs/environment.md](docs/environment.md)
+- **System Documentation:** Located in `docs/`
+- **Task Specifications:** Located in `docs/specs/`
