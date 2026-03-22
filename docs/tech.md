@@ -56,6 +56,28 @@ Notes:
 - Shared styles: `src/styles/tailwind.css`
 - Public assets: `public/`, `src/assets/`
 - Vitest tests: `src/**/*.test.ts`
+- Effect service definitions: `src/services/`
+- Typed error classes: `src/errors.ts`
+
+## Effect Services (`src/services/`)
+
+Effect is being introduced incrementally (see `docs/specs/effect-migration.md`).
+Service definitions live in `src/services/` alongside the existing module-level
+singletons (`src/db/db.ts`, `src/lib/propelauth.ts`, etc.) which remain the
+runtime path for tRPC procedures until a later migration phase wires Effect
+layers in.
+
+| Service | Tag | Shape | Lifetime |
+| --- | --- | --- | --- |
+| Database | `Database` | `PostgresJsDatabase` | Singleton per isolate |
+| Auth | `Auth` | `AuthClient` (subset of PropelAuth) | Singleton per isolate |
+| Payments | `Payments` | `PaymentsClient \| null` | Singleton per isolate |
+| Analytics | `Analytics` | `AnalyticsClient` | Singleton per isolate |
+| HttpRequest | `HttpRequest` | `RequestContext` | Per request |
+
+Each service file exports a `Context.Tag`, an interface, and a `*Live` layer.
+Test layers use `Layer.succeed` with mocks — see `src/services/services.test.ts`
+for patterns.
 
 ## Current Stack And Guardrails
 
