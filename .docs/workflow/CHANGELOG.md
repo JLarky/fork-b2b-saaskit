@@ -71,3 +71,27 @@
   existing module-level singleton, no new connections
 - hello router deferred to Phase 4 (counter is trivially stateful, hello procedure
   depends on tRPC unthunk context)
+
+## Phase 4: Migrate Complex Routers
+
+### Phase 4a: Auth Router
+
+- `src/handlers/auth.ts` — authSyncHandler with cookie management via HttpRequest
+- `src/handlers/auth.test.ts` — 4 tests for auth flows
+
+### Phase 4b: Settings Router
+
+- `src/handlers/settings.ts` — 5 handlers (stripeConfigured, getSubscriptions, getKeys, createKey, deleteKey)
+- `src/handlers/settings.test.ts` — 6 tests for key management + access control
+
+### Phase 4c: Prompts Router
+
+- `src/handlers/prompts.ts` — 9 handlers + 4 exported pure helpers covering all prompt CRUD, rate limiting, access control, and OpenAI integration
+- `src/handlers/prompts.test.ts` — 16 tests covering access control matrix, rate limit math, and handler flows
+
+### Architecture decisions
+
+- tRPC wrappers bridge services from existing singletons via `Layer.succeed(Database, db)` and `Layer.succeed(Auth, propelauth)`
+- `trackEvent` calls remain in tRPC wrappers (fire-and-forget, Phase 5 migration to Analytics service)
+- OpenAI API key and Stripe secret key passed as parameters to avoid new services for single-consumer config
+- hello router left unchanged (trivially stateful counter + tRPC unthunk context dependency)

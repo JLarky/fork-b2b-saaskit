@@ -3,7 +3,7 @@
 - [x] Phase 1: Add Effect, define services, typed errors (docs/specs/effect-migration.md)
 - [x] Phase 2: Migrate standalone API routes to Effect (fogbender.ts, create-checkout-session.ts)
 - [x] Phase 3: Migrate surveys router to Effect handlers
-- [ ] Phase 4: Migrate complex routers to Effect (auth, settings, prompts)
+- [x] Phase 4: Migrate complex routers to Effect (auth, settings, prompts)
 - [ ] Phase 5: Replace tRPC with Effect HTTP (optional, see spec)
 
 ## Discovered during Phase 1 (for human review)
