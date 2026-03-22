@@ -1,24 +1,15 @@
-import { TRPCError } from '@trpc/server';
-import { desc, eq } from 'drizzle-orm';
+import { Effect, Layer } from 'effect';
 import { z } from 'zod';
 
 import { db } from '../../../db/db';
-import { surveys } from '../../../db/schema';
+import { getPublicSurveys, postSurvey } from '../../../handlers/surveys';
+import { Database } from '../../../services/Database';
 import { createTRPCRouter, publicProcedure } from '../trpc';
 
+const provide = Effect.provide(Layer.succeed(Database, db));
+
 export const surveysRouter = createTRPCRouter({
-	getPublic: publicProcedure.query(async () => {
-		return await db
-			.select({
-				id: surveys.id,
-				rating: surveys.rating,
-				comments: surveys.comments,
-				createdAt: surveys.createdAt,
-			})
-			.from(surveys)
-			.where(eq(surveys.isPublic, true))
-			.orderBy(desc(surveys.id));
-	}),
+	getPublic: publicProcedure.query(() => Effect.runPromise(getPublicSurveys.pipe(provide))),
 	postSurvey: publicProcedure
 		.input(
 			z.object({
@@ -30,23 +21,13 @@ export const surveysRouter = createTRPCRouter({
 				comments: z.string().max(1500).optional(),
 			})
 		)
-		.mutation(async ({ input }) => {
-			const x = await db
-				.insert(surveys)
-				.values({
+		.mutation(({ input }) =>
+			Effect.runPromise(
+				postSurvey({
 					rating: input.rating,
 					isPublic: input.is_public,
 					comments: input.comments,
-				})
-				.returning({ id: surveys.id });
-			const survey = x[0];
-			if (!survey) {
-				throw new TRPCError({
-					code: 'INTERNAL_SERVER_ERROR',
-					message: 'Failed to create a survey.',
-				});
-			}
-
-			return survey.id;
-		}),
+				}).pipe(provide)
+			)
+		),
 });
