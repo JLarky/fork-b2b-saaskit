@@ -1,4 +1,5 @@
 - **Technical Notes:** See [docs/tech.md](docs/tech.md)
 - **Environment Notes:** See [docs/environment.md](docs/environment.md)
+- **Effect Source Setup:** See [docs/effect-source.md](docs/effect-source.md)
 - **System Documentation:** Located in `docs/`
 - **Task Specifications:** Located in `docs/specs/`
