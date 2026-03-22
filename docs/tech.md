@@ -44,6 +44,8 @@ Notes:
 - Astro routes/pages: `src/pages/`
 - App shell for logged-in experience: `src/components/app/`
 - Shared layouts: `src/layouts/`, `src/components/app/AppLayout.astro`
+- Effect services/layers: `src/services/`
+- Effect-backed API handlers: `src/handlers/api/`
 - tRPC server: `src/lib/trpc/`
 - tRPC HTTP entrypoint: `src/pages/api/trpc/[trpc].ts`
 - Other API routes: `src/pages/api/`
@@ -72,6 +74,7 @@ Notes:
   - tRPC is the primary typed server/client API layer.
   - Main router is `appRouter` in `src/lib/trpc/root.ts`.
   - Server context and auth/org middleware live in `src/lib/trpc/trpc.ts`.
+  - Standalone Astro API routes can host Effect handlers behind thin `src/pages/api/*.ts` wrappers.
 
 - Auth:
   - PropelAuth is the authentication provider.
