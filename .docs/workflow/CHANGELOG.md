@@ -53,3 +53,21 @@
 - Page files own error-to-Response mapping via `catchHttpErrors` + `catchAllDefect`
 - Both routes now use the shared `Auth` service instead of inline `initBaseAuth()`
 - FOGBENDER_SECRET injected as function parameter (not a service — single consumer)
+
+## Phase 3: Migrate Surveys Router
+
+### Added
+
+- `src/handlers/surveys.ts` — Effect handlers: `getPublicSurveys`, `postSurvey`
+- `src/handlers/surveys.test.ts` — 4 tests with mock Database layers
+
+### Changed
+
+- `src/lib/trpc/routers/surveys.ts` — thin tRPC wrapper over Effect handlers
+
+### Architecture decisions
+
+- tRPC wrappers provide Database via `Layer.succeed(Database, db)` — reuses the
+  existing module-level singleton, no new connections
+- hello router deferred to Phase 4 (counter is trivially stateful, hello procedure
+  depends on tRPC unthunk context)
