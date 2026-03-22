@@ -1,3 +1,3 @@
 # TODO
 
-- [ ] Migrate tRPC to Effect docs/specs/effect-migration.md
+- [ ] implement phase 0 from docs/specs/effect-migration.md
