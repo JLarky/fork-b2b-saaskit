@@ -56,14 +56,14 @@ reintroduce duplicate client initialization.
 
 ```ts
 // src/services/Database.ts
-import { Context, Effect, Layer } from "effect";
-import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import { Context, Effect, Layer } from 'effect';
+import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 
-export class Database extends Context.Tag("Database")<Database, PostgresJsDatabase>() {}
+export class Database extends Context.Tag('Database')<Database, PostgresJsDatabase>() {}
 
 export const DatabaseLive = Layer.sync(Database, () =>
-  drizzle(postgres(process.env.DATABASE_URL!))
+	drizzle(postgres(process.env.DATABASE_URL!))
 );
 
 export const DatabaseTest = (mock: PostgresJsDatabase) => Layer.succeed(Database, mock);
@@ -71,65 +71,65 @@ export const DatabaseTest = (mock: PostgresJsDatabase) => Layer.succeed(Database
 
 ```ts
 // src/services/Auth.ts
-import { Context, Layer } from "effect";
-import { initBaseAuth, type BaseAuthClient } from "@propelauth/node";
+import { Context, Layer } from 'effect';
+import { initBaseAuth, type BaseAuthClient } from '@propelauth/node';
 
 // Expose only the methods we actually use
 export interface AuthClient {
-  validateAccessTokenAndGetUser: BaseAuthClient["validateAccessTokenAndGetUser"];
-  validateAccessTokenAndGetUserWithOrgInfo: BaseAuthClient["validateAccessTokenAndGetUserWithOrgInfo"];
-  fetchBatchUserMetadataByUserIds: BaseAuthClient["fetchBatchUserMetadataByUserIds"];
+	validateAccessTokenAndGetUser: BaseAuthClient['validateAccessTokenAndGetUser'];
+	validateAccessTokenAndGetUserWithOrgInfo: BaseAuthClient['validateAccessTokenAndGetUserWithOrgInfo'];
+	fetchBatchUserMetadataByUserIds: BaseAuthClient['fetchBatchUserMetadataByUserIds'];
 }
 
-export class Auth extends Context.Tag("Auth")<Auth, AuthClient>() {}
+export class Auth extends Context.Tag('Auth')<Auth, AuthClient>() {}
 
 export const AuthLive = Layer.sync(Auth, () =>
-  initBaseAuth({
-    authUrl: process.env.PUBLIC_AUTH_URL!,
-    apiKey: process.env.PROPELAUTH_API_KEY!,
-    manualTokenVerificationMetadata: {
-      verifierKey: process.env.PROPELAUTH_VERIFIER_KEY!,
-      issuer: process.env.PUBLIC_AUTH_URL!,
-    },
-  })
+	initBaseAuth({
+		authUrl: process.env.PUBLIC_AUTH_URL!,
+		apiKey: process.env.PROPELAUTH_API_KEY!,
+		manualTokenVerificationMetadata: {
+			verifierKey: process.env.PROPELAUTH_VERIFIER_KEY!,
+			issuer: process.env.PUBLIC_AUTH_URL!,
+		},
+	})
 );
 ```
 
 ```ts
 // src/services/Payments.ts
-import { Context, Layer } from "effect";
-import Stripe from "stripe";
+import { Context, Layer } from 'effect';
+import Stripe from 'stripe';
 
 export interface PaymentsClient {
-  stripe: Stripe;
-  priceId: string;
+	stripe: Stripe;
+	priceId: string;
 }
 
-export class Payments extends Context.Tag("Payments")<
-  Payments,
-  PaymentsClient | null // null when Stripe is not configured
+export class Payments extends Context.Tag('Payments')<
+	Payments,
+	PaymentsClient | null // null when Stripe is not configured
 >() {}
 
 export const PaymentsLive = Layer.sync(Payments, () => {
-  const apiKey = process.env.STRIPE_SECRET_KEY;
-  const priceId = process.env.STRIPE_PRICE_ID;
-  if (!apiKey || !priceId) return null;
-  return {
-    stripe: new Stripe(apiKey, { apiVersion: "2022-11-15", typescript: true }),
-    priceId,
-  };
+	const apiKey = process.env.STRIPE_SECRET_KEY;
+	const priceId = process.env.STRIPE_PRICE_ID;
+	if (!apiKey || !priceId) return null;
+	return {
+		stripe: new Stripe(apiKey, { apiVersion: '2022-11-15', typescript: true }),
+		priceId,
+	};
 });
 ```
 
 ```ts
 // src/services/Analytics.ts
-import { Context, Layer } from "effect";
+import { Context, Layer } from 'effect';
 
 export interface AnalyticsClient {
-  trackEvent(distinctId: string, event: string, properties?: Record<string, unknown>): Effect<void>;
+	trackEvent(distinctId: string, event: string, properties?: Record<string, unknown>): Effect<void>;
 }
 
-export class Analytics extends Context.Tag("Analytics")<Analytics, AnalyticsClient>() {}
+export class Analytics extends Context.Tag('Analytics')<Analytics, AnalyticsClient>() {}
 
 // PostHog implementation for live
 // No-op implementation for test
@@ -137,14 +137,14 @@ export class Analytics extends Context.Tag("Analytics")<Analytics, AnalyticsClie
 
 ```ts
 // src/services/HttpRequest.ts
-import { Context } from "effect";
+import { Context } from 'effect';
 
 export interface RequestContext {
-  req: Request;
-  resHeaders: Headers;
+	request: Request;
+	resHeaders: Headers;
 }
 
-export class HttpRequest extends Context.Tag("HttpRequest")<HttpRequest, RequestContext>() {}
+export class HttpRequest extends Context.Tag('HttpRequest')<HttpRequest, RequestContext>() {}
 ```
 
 ## Typed Errors
@@ -153,23 +153,23 @@ Replace string-based `TRPCError` codes with discriminated unions:
 
 ```ts
 // src/errors.ts
-import { Data } from "effect";
+import { Data } from 'effect';
 
-export class Unauthorized extends Data.TaggedError("Unauthorized")<{
-  message: string;
+export class Unauthorized extends Data.TaggedError('Unauthorized')<{
+	message: string;
 }> {}
 
-export class Forbidden extends Data.TaggedError("Forbidden")<{
-  message: string;
+export class Forbidden extends Data.TaggedError('Forbidden')<{
+	message: string;
 }> {}
 
-export class NotFound extends Data.TaggedError("NotFound")<{
-  message: string;
+export class NotFound extends Data.TaggedError('NotFound')<{
+	message: string;
 }> {}
 
-export class RateLimited extends Data.TaggedError("RateLimited")<{
-  message: string;
-  resetsAt: Date;
+export class RateLimited extends Data.TaggedError('RateLimited')<{
+	message: string;
+	resetsAt: Date;
 }> {}
 ```
 
@@ -179,35 +179,35 @@ The current `unthunk`-based lazy context in `apiProcedure` maps naturally to Eff
 
 ```ts
 // src/services/Session.ts — replaces the unthunk block in apiProcedure
-import { Context, Effect, Layer } from "effect";
-import { parse } from "cookie";
-import { Auth } from "./Auth";
-import { HttpRequest } from "./HttpRequest";
+import { Context, Effect, Layer } from 'effect';
+import { parse } from 'cookie';
+import { Auth } from './Auth';
+import { HttpRequest } from './HttpRequest';
 
 export interface SessionData {
-  parsedCookies: Record<string, string>;
-  accessToken: string | undefined;
-  userOrgId: string | undefined;
-  user: Effect<User, Unauthorized>; // lazy — only runs when consumed
+	parsedCookies: Record<string, string>;
+	accessToken: string | undefined;
+	userOrgId: string | undefined;
+	user: Effect<User, Unauthorized>; // lazy — only runs when consumed
 }
 
-export class Session extends Context.Tag("Session")<Session, SessionData>() {}
+export class Session extends Context.Tag('Session')<Session, SessionData>() {}
 
 // Layer that derives Session from HttpRequest + Auth
 export const SessionFromRequest = Layer.effect(
-  Session,
-  Effect.gen(function* () {
-    const { req } = yield* HttpRequest;
-    const auth = yield* Auth;
-    const parsedCookies = parse(req.headers.get("cookie") || "");
-    // ... derive accessToken, userOrgId from cookies
-    // user is a lazy Effect, not eagerly awaited
-    const user = Effect.tryPromise({
-      try: () => auth.validateAccessTokenAndGetUser("Bearer " + accessToken),
-      catch: () => new Unauthorized({ message: "Could not validate access token." }),
-    });
-    return { parsedCookies, accessToken, userOrgId, user };
-  })
+	Session,
+	Effect.gen(function* () {
+		const { request } = yield* HttpRequest;
+		const auth = yield* Auth;
+		const parsedCookies = parse(request.headers.get('cookie') || '');
+		// ... derive accessToken, userOrgId from cookies
+		// user is a lazy Effect, not eagerly awaited
+		const user = Effect.tryPromise({
+			try: () => auth.validateAccessTokenAndGetUser('Bearer ' + accessToken),
+			catch: () => new Unauthorized({ message: 'Could not validate access token.' }),
+		});
+		return { parsedCookies, accessToken, userOrgId, user };
+	})
 );
 ```
 
@@ -215,21 +215,21 @@ The `authProcedure` and `orgProcedure` layers become:
 
 ```ts
 // AuthenticatedUser — replaces authProcedure middleware
-export class AuthenticatedUser extends Context.Tag("AuthenticatedUser")<
-  AuthenticatedUser,
-  User
+export class AuthenticatedUser extends Context.Tag('AuthenticatedUser')<
+	AuthenticatedUser,
+	User
 >() {}
 
 export const AuthenticatedUserFromSession = Layer.effect(
-  AuthenticatedUser,
-  Effect.gen(function* () {
-    const session = yield* Session;
-    return yield* session.user; // Unauthorized error propagates automatically
-  })
+	AuthenticatedUser,
+	Effect.gen(function* () {
+		const session = yield* Session;
+		return yield* session.user; // Unauthorized error propagates automatically
+	})
 );
 
 // OrgAccess — replaces orgProcedure middleware
-export class OrgAccess extends Context.Tag("OrgAccess")<OrgAccess, { orgId: string }>() {}
+export class OrgAccess extends Context.Tag('OrgAccess')<OrgAccess, { orgId: string }>() {}
 ```
 
 ## Migration Plan
@@ -249,7 +249,8 @@ Follow the instructions in [https://www.effect.solutions/project-setup](https://
 Repo note: keep new Vitest coverage under `src/**/*.test.ts` so it matches the current test include
 pattern documented in `docs/tech.md`.
 
-**Deliverable:** Services exist, nothing uses them yet.
+**Deliverable:** Services exist. In the first standalone-route slice they can be wired directly
+into migrated API handlers, while the remaining tRPC procedures still use the legacy path.
 
 ### Phase 2: Migrate standalone API routes
 
@@ -277,34 +278,32 @@ After:
 ```ts
 // pages/api/fogbender.ts
 const handler = Effect.gen(function* () {
-  const auth = yield* Auth;
-  const { req } = yield* HttpRequest;
-  // ... same logic, but auth comes from the service
+	const auth = yield* Auth;
+	const { request } = yield* HttpRequest;
+	// ... same logic, but auth comes from the service
 }).pipe(
-  Effect.catchTags({
-    Unauthorized: (e) => Effect.succeed(new Response(e.message, { status: 401 })),
-    Forbidden: (e) => Effect.succeed(new Response(e.message, { status: 403 })),
-  })
+	Effect.catchTags({
+		Unauthorized: (e) => Effect.succeed(new Response(e.message, { status: 401 })),
+		Forbidden: (e) => Effect.succeed(new Response(e.message, { status: 403 })),
+	})
 );
 
 export const POST: APIRoute = async ({ request }) => {
-  return Effect.runPromise(
-    handler.pipe(
-      Effect.provideLayer(
-        Layer.mergeAll(
-          AuthLive,
-          Layer.succeed(HttpRequest, { req: request, resHeaders: new Headers() })
-        )
-      )
-    )
-  );
+	return Effect.runPromise(
+		handler.pipe(
+			Effect.provideLayer(
+				Layer.mergeAll(AuthLive, Layer.succeed(HttpRequest, { request, resHeaders: new Headers() }))
+			)
+		)
+	);
 };
 ```
 
-Implementation note for this repo: keep the Astro route file as a thin wrapper and place the
-Effect program in an importable handler module under `src/handlers/api/` so tests can provide mock
-layers directly. Preserve the existing plain-text HTTP error contract by mapping Effect failures
-through `handleError(..., { returnDetailedErrorToUser: false })` until the API contract is
+Implementation note for this repo: keep the Astro route file as a thin wrapper, place the
+Effect program in an importable handler module under `src/handlers/api/`, and use a shared route
+adapter (for example `runApiHandler`) so tests can provide mock layers directly while production
+routes provide live layers. Preserve the existing plain-text HTTP error contract by mapping Effect
+failures through `handleError(..., { returnDetailedErrorToUser: false })` until the API contract is
 intentionally revised.
 
 **Deliverable:** Two API routes use Effect services. First real tests can mock `Auth`.
@@ -326,12 +325,12 @@ export const getPublicSurveys = Effect.gen(function* () {
 
 ```ts
 // routers/surveys.ts — thin tRPC wrapper (temporary, removed in Phase 5)
-import { getPublicSurveys } from "../../handlers/surveys";
+import { getPublicSurveys } from '../../handlers/surveys';
 
 export const surveysRouter = createTRPCRouter({
-  getPublic: publicProcedure.query(() =>
-    Effect.runPromise(getPublicSurveys.pipe(Effect.provide(LiveLayer)))
-  ),
+	getPublic: publicProcedure.query(() =>
+		Effect.runPromise(getPublicSurveys.pipe(Effect.provide(LiveLayer)))
+	),
 });
 ```
 
@@ -357,12 +356,12 @@ Replace the tRPC router + React Query client with `@effect/platform` HTTP:
 
 ```ts
 // src/api/router.ts
-import { HttpRouter, HttpServerResponse } from "@effect/platform";
+import { HttpRouter, HttpServerResponse } from '@effect/platform';
 
 const router = HttpRouter.empty.pipe(
-  HttpRouter.get("/api/surveys", getSurveysHandler),
-  HttpRouter.post("/api/surveys", postSurveyHandler)
-  // ...
+	HttpRouter.get('/api/surveys', getSurveysHandler),
+	HttpRouter.post('/api/surveys', postSurveyHandler)
+	// ...
 );
 ```
 
@@ -394,24 +393,24 @@ The whole point. Every service gets a test layer:
 
 ```ts
 // test/layers.ts
-import { Layer } from "effect";
+import { Layer } from 'effect';
 
 export const TestDatabase = (queries: Record<string, unknown[]>) =>
-  Layer.succeed(Database, mockDrizzle(queries));
+	Layer.succeed(Database, mockDrizzle(queries));
 
 export const TestAuth = (users: Record<string, User>) =>
-  Layer.succeed(Auth, {
-    validateAccessTokenAndGetUser: async (token) => {
-      const user = users[token.replace("Bearer ", "")];
-      if (!user) throw new Error("invalid");
-      return user;
-    },
-    validateAccessTokenAndGetUserWithOrgInfo: async () => {
-      throw new Error("not implemented");
-    },
-    fetchBatchUserMetadataByUserIds: async (ids) =>
-      Object.fromEntries(ids.map((id) => [id, users[id]]).filter(([, u]) => u)),
-  });
+	Layer.succeed(Auth, {
+		validateAccessTokenAndGetUser: async (token) => {
+			const user = users[token.replace('Bearer ', '')];
+			if (!user) throw new Error('invalid');
+			return user;
+		},
+		validateAccessTokenAndGetUserWithOrgInfo: async () => {
+			throw new Error('not implemented');
+		},
+		fetchBatchUserMetadataByUserIds: async (ids) =>
+			Object.fromEntries(ids.map((id) => [id, users[id]]).filter(([, u]) => u)),
+	});
 
 export const TestPayments = Layer.succeed(Payments, null);
 export const TestAnalytics = Layer.succeed(Analytics, { trackEvent: () => Effect.void });
@@ -420,23 +419,23 @@ export const TestAnalytics = Layer.succeed(Analytics, { trackEvent: () => Effect
 Example test:
 
 ```ts
-import { Effect } from "effect";
-import { describe, expect, it } from "vitest";
-import { getPublicSurveys } from "../src/handlers/surveys";
+import { Effect } from 'effect';
+import { describe, expect, it } from 'vitest';
+import { getPublicSurveys } from '../src/handlers/surveys';
 
-describe("getPublicSurveys", () => {
-  it("returns only public surveys", async () => {
-    const result = await Effect.runPromise(
-      getPublicSurveys.pipe(
-        Effect.provide(
-          TestDatabase({
-            surveys: [{ id: 1, rating: 5, isPublic: true, comments: "great" }],
-          })
-        )
-      )
-    );
-    expect(result).toHaveLength(1);
-  });
+describe('getPublicSurveys', () => {
+	it('returns only public surveys', async () => {
+		const result = await Effect.runPromise(
+			getPublicSurveys.pipe(
+				Effect.provide(
+					TestDatabase({
+						surveys: [{ id: 1, rating: 5, isPublic: true, comments: 'great' }],
+					})
+				)
+			)
+		);
+		expect(result).toHaveLength(1);
+	});
 });
 ```
 

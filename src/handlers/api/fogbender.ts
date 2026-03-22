@@ -5,7 +5,7 @@ import { Auth } from '../../services/Auth';
 import { HttpRequest } from '../../services/HttpRequest';
 import { serverEnv } from '../../t3-env';
 import type { FogbenderTokenResponse } from '../../types/types';
-import { requireNonEmptyString } from './shared';
+import { requireNonEmptyString, tryPromise, trySync } from './shared';
 
 type FogbenderRequestBody = {
 	orgId?: string;
@@ -16,7 +16,7 @@ export const fogbenderConfig = {
 };
 
 const readFogbenderRequest = (request: Request) =>
-	Effect.tryPromise(() => request.json() as Promise<FogbenderRequestBody>);
+	tryPromise(() => request.json() as Promise<FogbenderRequestBody>);
 
 export const fogbenderHandler = Effect.gen(function* () {
 	const auth = yield* Auth;
@@ -30,7 +30,7 @@ export const fogbenderHandler = Effect.gen(function* () {
 	const { orgId } = yield* readFogbenderRequest(request);
 	const requiredOrgId = yield* requireNonEmptyString(orgId, 'No orgId');
 
-	const { user, orgMemberInfo } = yield* Effect.tryPromise(() =>
+	const { user, orgMemberInfo } = yield* tryPromise(() =>
 		auth.validateAccessTokenAndGetUserWithOrgInfo(token, { orgId: requiredOrgId })
 	);
 
@@ -38,13 +38,11 @@ export const fogbenderHandler = Effect.gen(function* () {
 		userId: user.userId,
 		customerId: orgMemberInfo.orgId,
 	};
-	const userJWT = yield* Effect.try({
-		try: () =>
-			jsonwebtoken.sign(unsignedToken, secret, {
-				algorithm: 'HS256',
-			}),
-		catch: (error) => error,
-	});
+	const userJWT = yield* trySync(() =>
+		jsonwebtoken.sign(unsignedToken, secret, {
+			algorithm: 'HS256',
+		})
+	);
 
 	const responseData: FogbenderTokenResponse = {
 		...unsignedToken,

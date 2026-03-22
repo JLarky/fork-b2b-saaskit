@@ -2,11 +2,11 @@ import { ForbiddenException, OrgMemberInfo, type User } from '@propelauth/node';
 import { Effect } from 'effect';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { type AuthClient, AuthTest } from '../../services/Auth';
+import { HttpRequestTest } from '../../services/HttpRequest';
+import { type PaymentsClient, PaymentsTest } from '../../services/Payments';
 import { createCheckoutSessionHandler } from './createCheckoutSession';
 import { withApiErrorResponse } from './shared';
-import { AuthTest, type AuthClient } from '../../services/Auth';
-import { HttpRequestTest } from '../../services/HttpRequest';
-import { PaymentsTest, type PaymentsClient } from '../../services/Payments';
 
 const createUser = (userId = 'user-123'): User => ({
 	userId,
@@ -23,7 +23,7 @@ const createAuth = (
 
 const createPayments = (options?: { url?: string | null }) => {
 	const createSession = vi.fn().mockResolvedValue({
-		url: options?.url ?? 'https://stripe.test/checkout-session',
+		url: options && 'url' in options ? options.url : 'https://stripe.test/checkout-session',
 	});
 
 	const payments: PaymentsClient = {
@@ -206,6 +206,27 @@ describe('createCheckoutSessionHandler', () => {
 					'Content-Type': 'application/json',
 				},
 				body: '{',
+			}),
+			createAuth(async () => ({
+				user: createUser(),
+				orgMemberInfo: new OrgMemberInfo('org-123', 'Acme', {}, 'acme', 'Admin', ['Admin'], []),
+			})),
+			createPayments().payments
+		);
+
+		expect(response.status).toBe(401);
+		expect(await response.text()).toBe('Unauthorized');
+	});
+
+	it('returns the existing unauthorized contract when orgId is missing', async () => {
+		const response = await runCheckoutSession(
+			new Request('https://example.com/api/create-checkout-session', {
+				method: 'POST',
+				headers: {
+					Authorization: 'Bearer token',
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({}),
 			}),
 			createAuth(async () => ({
 				user: createUser(),

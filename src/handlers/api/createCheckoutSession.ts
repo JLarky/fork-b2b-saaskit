@@ -3,14 +3,14 @@ import { Effect } from 'effect';
 import { Auth } from '../../services/Auth';
 import { HttpRequest } from '../../services/HttpRequest';
 import { Payments } from '../../services/Payments';
-import { requireNonEmptyString } from './shared';
+import { requireNonEmptyString, tryPromise } from './shared';
 
 type CheckoutSessionRequestBody = {
 	orgId?: string;
 };
 
 const readCheckoutSessionRequest = (request: Request) =>
-	Effect.tryPromise(() => request.json() as Promise<CheckoutSessionRequestBody>);
+	tryPromise(() => request.json() as Promise<CheckoutSessionRequestBody>);
 
 export const createCheckoutSessionHandler = Effect.gen(function* () {
 	const auth = yield* Auth;
@@ -18,19 +18,19 @@ export const createCheckoutSessionHandler = Effect.gen(function* () {
 	const { request } = yield* HttpRequest;
 
 	if (!payments) {
-		yield* Effect.fail(new Error('Stripe secret key and price ID are not configured'));
+		return yield* Effect.fail(new Error('Stripe secret key and price ID are not configured'));
 	}
 
 	const token = yield* requireNonEmptyString(request.headers.get('Authorization'), 'No token');
 	const { orgId } = yield* readCheckoutSessionRequest(request);
 	const requiredOrgId = yield* requireNonEmptyString(orgId, 'No orgId');
 
-	yield* Effect.tryPromise(() =>
+	yield* tryPromise(() =>
 		auth.validateAccessTokenAndGetUserWithOrgInfo(token, { orgId: requiredOrgId })
 	);
 
 	const appUrl = new URL('/app/settings', request.url).toString();
-	const session = yield* Effect.tryPromise(() =>
+	const session = yield* tryPromise(() =>
 		payments.stripe.checkout.sessions.create({
 			client_reference_id: requiredOrgId,
 			line_items: [

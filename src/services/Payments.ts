@@ -1,5 +1,5 @@
-import type Stripe from 'stripe';
 import { Context, Layer } from 'effect';
+import type Stripe from 'stripe';
 
 import { getStripeConfig, openStripe } from '../lib/stripe';
 

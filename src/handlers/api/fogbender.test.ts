@@ -3,10 +3,10 @@ import { Effect } from 'effect';
 import jsonwebtoken from 'jsonwebtoken';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { fogbenderHandler, fogbenderConfig } from './fogbender';
-import { withApiErrorResponse } from './shared';
-import { AuthTest, type AuthClient } from '../../services/Auth';
+import { type AuthClient, AuthTest } from '../../services/Auth';
 import { HttpRequestTest } from '../../services/HttpRequest';
+import { fogbenderConfig, fogbenderHandler } from './fogbender';
+import { withApiErrorResponse } from './shared';
 
 const createUser = (userId = 'user-123'): User => ({
 	userId,
@@ -123,6 +123,28 @@ describe('fogbenderHandler', () => {
 					'Content-Type': 'application/json',
 				},
 				body: '{',
+			}),
+			createAuth(async () => ({
+				user: createUser(),
+				orgMemberInfo: new OrgMemberInfo('org-123', 'Acme', {}, 'acme', 'Admin', ['Admin'], []),
+			}))
+		);
+
+		expect(response.status).toBe(401);
+		expect(await response.text()).toBe('Unauthorized');
+	});
+
+	it('returns the existing unauthorized contract when orgId is missing', async () => {
+		vi.spyOn(fogbenderConfig, 'getSecret').mockReturnValue('test-secret');
+
+		const response = await runFogbender(
+			new Request('https://example.com/api/fogbender', {
+				method: 'POST',
+				headers: {
+					Authorization: 'Bearer token',
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({}),
 			}),
 			createAuth(async () => ({
 				user: createUser(),
