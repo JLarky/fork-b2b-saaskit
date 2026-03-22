@@ -32,3 +32,24 @@
 
 - All 6 review personas (Designer, Architect, Domain Expert, Code Expert, Performance Expert, Human Advocate) evaluated the plan and implementation
 - Key feedback addressed: env consistency, PostHog lifecycle documentation, test naming, HttpRequest layer docs
+
+## Phase 2: Migrate Standalone API Routes
+
+### Added
+
+- `src/handlers/fogbender.ts` — Effect handler for Fogbender JWT generation
+- `src/handlers/checkout.ts` — Effect handler for Stripe checkout session
+- `src/handlers/response.ts` — shared `catchHttpErrors` helper (error tag → HTTP status)
+- 9 new tests across `fogbender.test.ts` and `checkout.test.ts`
+
+### Changed
+
+- `src/pages/api/fogbender.ts` — thin wrapper over Effect handler
+- `src/pages/api/create-checkout-session.ts` — thin wrapper over Effect handler
+
+### Architecture decisions
+
+- Handlers in `src/handlers/` return typed data, not Response objects — for testability
+- Page files own error-to-Response mapping via `catchHttpErrors` + `catchAllDefect`
+- Both routes now use the shared `Auth` service instead of inline `initBaseAuth()`
+- FOGBENDER_SECRET injected as function parameter (not a service — single consumer)

@@ -57,6 +57,7 @@ Notes:
 - Public assets: `public/`, `src/assets/`
 - Vitest tests: `src/**/*.test.ts`
 - Effect service definitions: `src/services/`
+- Effect handlers (extracted business logic): `src/handlers/`
 - Typed error classes: `src/errors.ts`
 
 ## Effect Services (`src/services/`)
