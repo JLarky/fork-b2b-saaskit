@@ -86,7 +86,7 @@ describe('Auth service', () => {
 		expect(result).toEqual({});
 	});
 
-	it('validates tokens against a user map', async () => {
+	it('resolves users by id from a seeded user map', async () => {
 		const users = {
 			token123: {
 				userId: 'user-a',

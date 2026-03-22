@@ -14,6 +14,11 @@ export interface AnalyticsClient {
 export class Analytics extends Context.Tag('Analytics')<Analytics, AnalyticsClient>() {}
 
 // No-ops when PUBLIC_POSTHOG_KEY is unset, matching current behavior.
+// The per-event PostHog client + shutdownAsync pattern mirrors src/lib/posthog.ts
+// and is intentional for Vercel/serverless: it guarantees each event is flushed
+// before the isolate is recycled. A long-lived client with batched flush would be
+// more efficient for long-running servers — consider switching if the deployment
+// model changes.
 export const AnalyticsLive = Layer.sync(Analytics, () => {
 	const posthogKey = serverEnv.PUBLIC_POSTHOG_KEY;
 	if (!posthogKey) {

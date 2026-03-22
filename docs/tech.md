@@ -67,15 +67,18 @@ singletons (`src/db/db.ts`, `src/lib/propelauth.ts`, etc.) which remain the
 runtime path for tRPC procedures until a later migration phase wires Effect
 layers in.
 
-| Service | Tag | Shape | Lifetime |
-| --- | --- | --- | --- |
-| Database | `Database` | `PostgresJsDatabase` | Singleton per isolate |
-| Auth | `Auth` | `AuthClient` (subset of PropelAuth) | Singleton per isolate |
-| Payments | `Payments` | `PaymentsClient \| null` | Singleton per isolate |
-| Analytics | `Analytics` | `AnalyticsClient` | Singleton per isolate |
-| HttpRequest | `HttpRequest` | `RequestContext` | Per request |
+| Service     | Tag           | Shape                               | Lifetime              |
+| ----------- | ------------- | ----------------------------------- | --------------------- |
+| Database    | `Database`    | `PostgresJsDatabase`                | Singleton per isolate |
+| Auth        | `Auth`        | `AuthClient` (subset of PropelAuth) | Singleton per isolate |
+| Payments    | `Payments`    | `PaymentsClient \| null`            | Singleton per isolate |
+| Analytics   | `Analytics`   | `AnalyticsClient`                   | Singleton per isolate |
+| HttpRequest | `HttpRequest` | `RequestContext`                    | Per request           |
 
-Each service file exports a `Context.Tag`, an interface, and a `*Live` layer.
+Each service file exports a `Context.Tag` and an interface. All services except
+`HttpRequest` also export a `*Live` layer — `HttpRequest` has no live layer
+because it is provided per-request by the route handler.
+
 Test layers use `Layer.succeed` with mocks — see `src/services/services.test.ts`
 for patterns.
 
@@ -120,6 +123,7 @@ for patterns.
 - Testing:
   - Vitest is configured with `environment: 'node'`.
   - Only files matching `src/**/*.test.ts` are included by default.
+  - Tests that import service modules (which transitively import `t3-env.ts`) require `SKIP_ENV_VALIDATION=true` when running without full env setup. This is already the case for `yarn test` in CI-like environments without Doppler.
 
 ## Documentation Reliability
 
