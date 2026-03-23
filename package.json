@@ -40,6 +40,7 @@
     "@types/jsonwebtoken": "^9.0.2",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
+    "@varlock/astro-integration": "^0.2.5",
     "astro": "5.1.8",
     "astro-seo": "^0.7.2",
     "clsx": "^1.2.1",
@@ -62,6 +63,7 @@
     "stripe": "^12.12.0",
     "tsx": "^4.17.0",
     "unthunk": "^0.0.1",
+    "varlock": "^0.6.3",
     "vite-plugin-checker": "^0.6.2",
     "wretch": "^2.5.2"
   },

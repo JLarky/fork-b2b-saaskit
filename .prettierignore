@@ -3,3 +3,4 @@ dist
 .vscode
 .vercel
 src/db/meta/
+src/varlock-env.d.ts

@@ -2082,6 +2082,11 @@
   resolved "https://registry.yarnpkg.com/@ungap/structured-clone/-/structured-clone-1.2.0.tgz#756641adb587851b5ccb3e095daf27ae581c8406"
   integrity sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==
 
+"@varlock/astro-integration@^0.2.5":
+  version "0.2.5"
+  resolved "https://registry.yarnpkg.com/@varlock/astro-integration/-/astro-integration-0.2.5.tgz#817d87cc453a6d4b95921d1411cbf4344036b182"
+  integrity sha512-1BhyX91JmmSjD7HhF2pWqBaqwwKg4eT0J+CeVZuXDzMRMg1DxyIFvgUoHxCdBQRzznSbmmNKD3pI3aF8hwCd3g==
+
 "@vercel/analytics@^1.4.1":
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/@vercel/analytics/-/analytics-1.4.1.tgz#a28a93133d68b6e3d86884a52fa7893f5ecaa381"
@@ -6425,6 +6430,11 @@ utility-types@^3.10.0:
   version "3.10.0"
   resolved "https://registry.yarnpkg.com/utility-types/-/utility-types-3.10.0.tgz#ea4148f9a741015f05ed74fd615e1d20e6bed82b"
   integrity sha512-O11mqxmi7wMKCo6HKFt5AhO4BwY3VV68YU07tgxfz8zJTIxr4BpsezN49Ffwy9j3ZpwwJp4fkRwjRzq3uWE6Rg==
+
+varlock@^0.6.3:
+  version "0.6.3"
+  resolved "https://registry.yarnpkg.com/varlock/-/varlock-0.6.3.tgz#3816d10599398e34396f7141cce90752c32127ac"
+  integrity sha512-cIeXMs7Vhw9LCz1mZFJjxaBD2Z+rIpVMK49tYnZT7lNWO5Ey6vyCaW+B2IsL5zufuyNMxG1UvK5FZnfI5kVFBQ==
 
 vfile-location@^5.0.0:
   version "5.0.3"

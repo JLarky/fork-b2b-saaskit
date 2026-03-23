@@ -1,8 +1,13 @@
 import { createEnv, type Simplify } from '@t3-oss/env-core';
+import { ENV } from 'varlock/env';
 import { z } from 'zod';
 
-// in case if the script was imported from node like in case of migrations
-const runtimeEnv = import.meta.env || process.env;
+const runtimeEnv = {
+	DATABASE_URL: ENV.DATABASE_URL,
+	PROPELAUTH_API_KEY: ENV.PROPELAUTH_API_KEY,
+	PROPELAUTH_VERIFIER_KEY: ENV.PROPELAUTH_VERIFIER_KEY,
+	PUBLIC_AUTH_URL: ENV.PUBLIC_AUTH_URL,
+}
 
 const clientPrefix = 'PUBLIC_' as const;
 
@@ -15,27 +20,16 @@ export const serverEnv = createEnv({
 		// propel auth
 		PROPELAUTH_API_KEY: z.string().min(1),
 		PROPELAUTH_VERIFIER_KEY: z.string().min(1),
-		// optional Fogbender
-		FOGBENDER_SECRET: z.string().min(1).optional(),
-		// optional OpenAI API key
-		OPENAI_API_KEY: z.string().min(1).optional(),
-		// optional Stripe
-		STRIPE_SECRET_KEY: z.string().min(1).optional(),
-		STRIPE_PRICE_ID: z.string().min(1).optional(),
 	},
 	client: {
 		// propel auth
 		PUBLIC_AUTH_URL: z.string().min(1),
-		// fogbender
-		PUBLIC_FOGBENDER_WIDGET_ID: z.string().min(1).optional(),
-		// posthog
-		PUBLIC_POSTHOG_KEY: z.string().min(1).optional(),
 	},
 	runtimeEnv,
 	skipValidation:
-		!!runtimeEnv.SKIP_ENV_VALIDATION &&
-		runtimeEnv.SKIP_ENV_VALIDATION !== 'false' &&
-		runtimeEnv.SKIP_ENV_VALIDATION !== '0',
+		!!process.env.SKIP_ENV_VALIDATION &&
+		process.env.SKIP_ENV_VALIDATION !== 'false' &&
+		process.env.SKIP_ENV_VALIDATION !== '0',
 	onValidationError: (zodError) => {
 		// we can't use internal AstroError directly unfortunatelly https://github.com/withastro/astro/blob/c459b81785b8bbdd07c3d27b471990e8ffa656df/packages/astro/src/core/errors/errors.ts#L32
 		class AstroError extends Error {
