@@ -9,6 +9,7 @@ import { db } from '../../../db/db';
 import { gptKeys, promptLikes, prompts, sharedKeyRatelimit } from '../../../db/schema';
 import { serverEnv } from '../../../t3-env';
 import { trackEvent } from '../../posthog';
+import { evaluateUpdatePromptAccess } from '../../prompts/updatePromptAccess';
 import { propelauth } from '../../propelauth';
 import { usersToPublicUserInfo } from '../../publicUserInfo';
 import { getStripeConfig, searchSubscriptionsByOrgId } from '../../stripe';
@@ -174,26 +175,34 @@ export const promptsRouter = createTRPCRouter({
 			const description = input.description || '';
 			const tags = (input.tags || []).map((x) => x.trim()).filter((x) => x.length > 0);
 			const template = input.template satisfies Message[];
-			// TODO: check user and org access
 			{
 				const x = await db
 					.select({
 						userId: prompts.userId,
+						orgId: prompts.orgId,
 					})
 					.from(prompts)
 					.where(eq(prompts.promptId, input.promptId));
 				const prompt = x[0];
-				if (!prompt) {
+				const access = evaluateUpdatePromptAccess(prompt, ctx.user.userId, ctx.requiredOrgId);
+				if (access === 'not_found') {
 					throw new TRPCError({
 						code: 'NOT_FOUND',
-						message: 'Prompt not found',
+						message: `Prompt ${input.promptId} not found`,
 					});
 				}
 
-				if (prompt?.userId !== ctx.user.userId) {
+				if (access === 'forbidden_user') {
 					throw new TRPCError({
 						code: 'FORBIDDEN',
 						message: 'You can only update your own prompts, try saving a copy instead.',
+					});
+				}
+
+				if (access === 'forbidden_org') {
+					throw new TRPCError({
+						code: 'FORBIDDEN',
+						message: 'You can only update prompts from your active organization.',
 					});
 				}
 			}
