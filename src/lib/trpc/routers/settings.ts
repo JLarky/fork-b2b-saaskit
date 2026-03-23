@@ -88,14 +88,14 @@ export const settingsRouter = createTRPCRouter({
 			if (!item) {
 				throw new TRPCError({
 					code: 'NOT_FOUND',
-					message: 'Prompt not found',
+					message: 'Key not found',
 				});
 			}
 
 			if (!canOnlyChangeOwnKey(ctx, item)) {
 				throw new TRPCError({
 					code: 'FORBIDDEN',
-					message: 'You can only delete your own prompts.',
+					message: 'You can only delete your own keys.',
 				});
 			}
 
