@@ -9,7 +9,9 @@ jobs:
       - name: Install Doppler CLI
         uses: dopplerhq/cli-action@v3
       - name: Sync astro
-        run: yarn astro sync
+        run: doppler run -- yarn astro sync
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
       - name: Unit tests
         run: yarn test
         env:
