@@ -1,39 +1,23 @@
-import type { OrgMemberInfo, User } from '@propelauth/node';
+import type { User } from '@propelauth/node';
+import { OrgMemberInfo } from '@propelauth/node';
 import { vi } from 'vitest';
 
-// Store mock functions so they're accessible after vi.mock hoisting
-const validateAccessTokenAndGetUser = vi.fn();
-const fetchBatchUserMetadataByUserIds = vi.fn().mockResolvedValue({});
-
-// Mock propelauth before any router imports
-// This prevents the real initBaseAuth from running (which requires valid env vars)
-vi.mock('../../propelauth', () => ({
-	propelauth: {
-		validateAccessTokenAndGetUser,
-		fetchBatchUserMetadataByUserIds,
-	},
-}));
-
-// Mock posthog to avoid real analytics calls
-vi.mock('../../posthog', () => ({
-	trackEvent: vi.fn(),
-}));
+// Store mock functions so they're accessible from fakeAuthContext
+export const mockValidateAccessTokenAndGetUser = vi.fn();
+export const mockFetchBatchUserMetadataByUserIds = vi.fn().mockResolvedValue({});
 
 /** Build a fake PropelAuth User object */
 export function fakeUser(overrides: Partial<User> & { userId: string; orgId?: string }): User {
 	const orgId = overrides.orgId ?? 'test-org-id';
-	const orgMemberInfo: OrgMemberInfo = {
+	const orgMemberInfo = new OrgMemberInfo(
 		orgId,
-		orgName: 'Test Org',
-		orgMetadata: {},
-		urlSafeOrgName: 'test-org',
-		userAssignedRole: 'Owner',
-		userInheritedRolesPlusCurrentRole: ['Owner', 'Admin', 'Member'],
-		userPermissions: [],
-		hasPermission: () => true,
-		isRole: () => true,
-		isAtLeastRole: () => true,
-	};
+		'Test Org',
+		{},
+		'test-org',
+		'Owner',
+		['Owner', 'Admin', 'Member'],
+		[]
+	);
 
 	return {
 		userId: overrides.userId,
@@ -68,7 +52,7 @@ export function fakeAuthContext(user: User, orgId: string) {
 	const cookieHeader = `b2b_auth=${httpOnlyCookie}; js_b2b_auth=${publicCookie}`;
 
 	// Set up propelauth mock to resolve this user for the fake token
-	validateAccessTokenAndGetUser.mockResolvedValue(user);
+	mockValidateAccessTokenAndGetUser.mockResolvedValue(user);
 
 	return {
 		req: new Request('http://localhost:3000/api/trpc', {

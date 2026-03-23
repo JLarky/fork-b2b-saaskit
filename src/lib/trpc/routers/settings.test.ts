@@ -59,8 +59,8 @@ describe('settings router', () => {
 		it('createKey replaces existing key for the same org', async () => {
 			const caller = authedCaller();
 
-			// Create first key
-			const _keyId1 = await caller.settings.createKey({
+			// Create first key (replaced by second, so we don't track it)
+			await caller.settings.createKey({
 				orgId: TEST_ORG_ID,
 				keySecret: 'sk-first-key-abcdef1234',
 				keyType: 'gpt-3',

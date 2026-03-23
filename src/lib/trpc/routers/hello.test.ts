@@ -1,5 +1,3 @@
-import './test-utils';
-
 import { describe, expect, it } from 'vitest';
 
 import { createCaller } from '../root';

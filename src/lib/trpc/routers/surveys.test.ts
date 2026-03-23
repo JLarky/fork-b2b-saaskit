@@ -1,5 +1,3 @@
-import './test-utils';
-
 import { afterAll, describe, expect, it } from 'vitest';
 
 import { sql } from '../../../db/db';
