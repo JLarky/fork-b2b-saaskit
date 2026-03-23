@@ -3,9 +3,9 @@
 ## Setup
 
 - Tests run via `yarn test` which uses `doppler run -- vitest run`
+- All tests require Doppler to inject environment variables (no `SKIP_ENV_VALIDATION` fallback)
 - DB must have migrations applied (`doppler run yarn migrate`)
 - CI needs a `DOPPLER_TOKEN` secret configured in GitHub
-- `vitest.config.ts` sets `SKIP_ENV_VALIDATION=true` so tests can compile without Doppler (unit tests pass; DB tests need Doppler)
 
 ## Test Files
 
@@ -25,8 +25,8 @@
 
 ### Test utilities
 
+- `vitest-setup.ts` — global test setup that mocks `propelauth` and `posthog` via `vi.mock()` so tests use fake auth instead of real PropelAuth
 - `src/lib/trpc/routers/test-utils.ts` — shared auth mocking infrastructure:
-  - `vi.mock()` for `propelauth` and `posthog` (prevents real service initialization)
   - `fakeUser()` — builds a PropelAuth User with org membership
   - `fakeAuthContext()` — builds a Request with cookies that satisfy apiProcedure/authProcedure/orgProcedure middleware
 
