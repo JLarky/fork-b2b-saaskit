@@ -34,7 +34,7 @@ yarn full:check
 Notes:
 
 - This repo uses Yarn Classic (`yarn.lock`), not pnpm or npm.
-- CI runs on Node 20 via `.github/actions/prepare/action.yml`, while `package.json` allows Node `^18.17.1 || ^20.3.0 || >=22.0.0`.
+- CI runs on Node 22 via `.github/actions/prepare/action.yml`, matching `package.json` engines `>=22.18.0`.
 - `yarn ci:check` runs `astro check && tsc --noEmit`.
 - CI splits checks into separate workflows for lint, formatting, tests, and TypeScript; keep local validation aligned with `.github/workflows/`.
 
