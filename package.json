@@ -10,7 +10,7 @@
     "build": "astro build",
     "full:check": "yarn fix && yarn ci:check && doppler run --config prd yarn build",
     "ci:check": "astro check && tsc --noEmit",
-    "test": "vitest run",
+    "test": "doppler run -- vitest run",
     "test:watch": "vitest",
     "preview": "astro preview",
     "lint": "oxlint . --deny-warnings",
