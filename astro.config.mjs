@@ -8,7 +8,7 @@ import checker from 'vite-plugin-checker';
 export default defineConfig({
 	integrations: [react(), varlockAstroIntegration()],
 	adapter: vercel({}),
-	site: process.env.SITE_URL,
+	site: process.env.SITE_URL || undefined,
 	vite: {
 		plugins: [
 			checker({
