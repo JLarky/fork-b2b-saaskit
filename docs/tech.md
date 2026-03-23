@@ -89,7 +89,7 @@ Notes:
 - Environment/secrets:
   - Environment variables are validated in `src/t3-env.ts` with `@t3-oss/env-core` + Zod.
   - Normal local/dev workflows expect `doppler run ...`, not plain `yarn dev`.
-  - `SKIP_ENV_VALIDATION=true` exists as an escape hatch for partial setup, but should not be the default assumption.
+  - CI and local test runs use `doppler run` to inject secrets; a `DOPPLER_TOKEN` secret must be configured in the GitHub repo.
 
 - Deployment:
   - Astro uses the Vercel adapter in `astro.config.mjs`.
