@@ -15,6 +15,7 @@
 12. Run the review agents again on the implementation diff, and loop back to step 10 until all review agents give a green light.
 13. Add any unrelated TODOs noticed along the way to the TODO doc for human review.
 14. Wrap up: write a CHANGELOG entry, then commit with a detailed commit message meant for human context when reviewing the code.
-15. Loop back to the beginning at step 1, then select the next task or spec.
-16. When completely done, write a report for human review. It should be extremely concise. Details live in commit messages.
-17. The Night Shift is done. It goes silent and waits for the next day shift.
+15. If a PR was created or updated during this task, wait for CI to finish and confirm all checks pass. If any check fails, diagnose, fix, push, and re-check until green.
+16. Loop back to the beginning at step 1, then select the next task or spec.
+17. When completely done, write a report for human review. It should be extremely concise. Details live in commit messages.
+18. The Night Shift is done. It goes silent and waits for the next day shift.
