@@ -1,8 +1,8 @@
 import { createEnv, type Simplify } from '@t3-oss/env-core';
+import { ENV } from 'varlock/env';
 import { z } from 'zod';
 
-// in case if the script was imported from node like in case of migrations
-const runtimeEnv = import.meta.env || process.env;
+const runtimeEnv = ENV;
 
 const clientPrefix = 'PUBLIC_' as const;
 
@@ -33,9 +33,9 @@ export const serverEnv = createEnv({
 	},
 	runtimeEnv,
 	skipValidation:
-		!!runtimeEnv.SKIP_ENV_VALIDATION &&
-		runtimeEnv.SKIP_ENV_VALIDATION !== 'false' &&
-		runtimeEnv.SKIP_ENV_VALIDATION !== '0',
+		!!process.env.SKIP_ENV_VALIDATION &&
+		process.env.SKIP_ENV_VALIDATION !== 'false' &&
+		process.env.SKIP_ENV_VALIDATION !== '0',
 	onValidationError: (zodError) => {
 		// we can't use internal AstroError directly unfortunatelly https://github.com/withastro/astro/blob/c459b81785b8bbdd07c3d27b471990e8ffa656df/packages/astro/src/core/errors/errors.ts#L32
 		class AstroError extends Error {

@@ -1,3 +1,5 @@
+import 'varlock/auto-load';
+
 import { vi } from 'vitest';
 
 import {
