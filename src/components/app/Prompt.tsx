@@ -1,10 +1,11 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { websiteTitle } from '../../constants';
 import type { PromptPrivacyLevel } from '../../lib/trpc/routers/prompts';
-import { type RouterOutput, trpc } from '../trpc';
+import { orpc } from '../trpc';
 import { Layout } from './Layout';
 import { usePromptErrorPage } from './usePromptErrorPage';
 import { type Message, resolveTemplates, useRedirectToLoginPage } from './utils';
@@ -13,32 +14,34 @@ export function Prompt() {
 	const navigate = useNavigate();
 	const { redirectToLogin } = useRedirectToLoginPage();
 	const { promptId } = useParams<{ promptId: string }>();
-	const trpcUtils = trpc.useContext();
-	const promptQuery = trpc.prompts.getPrompt.useQuery(
-		{
-			promptId: promptId!,
-		},
-		{
+	const queryClient = useQueryClient();
+	const promptQuery = useQuery(
+		orpc.prompts.getPrompt.queryOptions({
+			input: { promptId: promptId! },
 			enabled: !!promptId,
 			staleTime: 1000,
 			retry: (retry, error) => {
-				return retry < 3 && !error.data?.code;
+				return retry < 3 && !(error as any)?.code;
 			},
-		}
+		})
 	);
 
-	const likeMutation = trpc.prompts.likePrompt.useMutation({
-		onError: (error) => {
-			if (error.data?.code === 'UNAUTHORIZED') {
-				redirectToLogin(window.location.pathname);
-			}
-		},
-		onSettled: () => {
-			trpcUtils?.prompts.getPrompt.invalidate({ promptId });
-		},
-	});
+	const likeMutation = useMutation(
+		orpc.prompts.likePrompt.mutationOptions({
+			onError: (error) => {
+				if ((error as any)?.code === 'UNAUTHORIZED') {
+					redirectToLogin(window.location.pathname);
+				}
+			},
+			onSettled: () => {
+				queryClient.invalidateQueries({
+					queryKey: orpc.prompts.getPrompt.key({ input: { promptId: promptId! } }),
+				});
+			},
+		})
+	);
 
-	const errorPage = usePromptErrorPage(promptQuery.status, promptQuery.error?.data?.code);
+	const errorPage = usePromptErrorPage(promptQuery.status, (promptQuery.error as any)?.data?.code);
 
 	if (errorPage) {
 		return errorPage;
@@ -57,7 +60,10 @@ export function Prompt() {
 						<button
 							onClick={() => {
 								likeMutation.mutate({ promptId, unlike: data?.myLike });
-								trpcUtils.prompts.getPrompt.setData({ promptId }, (data) => {
+								const queryKey = orpc.prompts.getPrompt.queryKey({
+									input: { promptId },
+								});
+								queryClient.setQueryData(queryKey, (data: typeof promptQuery.data) => {
 									if (!data) {
 										return data;
 									}
@@ -220,14 +226,14 @@ const config = new Configuration({
 })
 const openai = new OpenAIApi(config);
 
-const response = await openai.createChatCompletion({  
+const response = await openai.createChatCompletion({
   model: 'gpt-3.5-turbo',
   messages: ${json},
   max_tokens: 200,
   temperature: 0.7,
-  top_p: 1,   
+  top_p: 1,
   frequency_penalty: 1,
-  presence_penalty: 1,    
+  presence_penalty: 1,
 });
 const result = await response.json();
 const completion = result.choices[0].message.content`;
@@ -239,9 +245,6 @@ const focus = (el: Element | undefined | null) => {
 	}
 };
 
-/**
- * @see https://uxdesign.cc/how-to-trap-focus-inside-modal-to-make-it-ada-compliant-6a50f9a70700
- */
 const SimpleModalButton = ({
 	className,
 	title = 'Share',
@@ -259,7 +262,6 @@ const SimpleModalButton = ({
 			focusRef.current = document.activeElement;
 			document.body.style.overflow = 'hidden';
 		} else {
-			// try to restore focus to the last focused element
 			focus(focusRef.current);
 			document.body.style.overflow = 'unset';
 		}
@@ -269,18 +271,15 @@ const SimpleModalButton = ({
 			}
 			const isTabPressed = e.key === 'Tab';
 			if (isTabPressed) {
-				// add all the elements inside modal which you want to make focusable
 				const focusableElements =
 					'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
 				const focusableContent = modalRef.current?.querySelectorAll(focusableElements);
 				if (e.shiftKey) {
-					// shift + tab wraps focus to end if you're on first element
 					if (document.activeElement === focusableContent?.[0]) {
 						e.preventDefault();
 						focus(focusableContent?.[focusableContent.length - 1]);
 					}
 				} else {
-					// tab wraps focus to start if you're on last element
 					if (document.activeElement === focusableContent?.[focusableContent.length - 1]) {
 						e.preventDefault();
 						focus(focusableContent?.[0]);
@@ -330,14 +329,22 @@ const SimpleModalButton = ({
 	);
 };
 
-const ShareDialog = ({ response }: { response: RouterOutput['prompts']['getPrompt'] }) => {
+type PromptData = NonNullable<
+	ReturnType<typeof useQuery<Awaited<ReturnType<typeof orpc.prompts.getPrompt.call>>>>['data']
+>;
+
+const ShareDialog = ({ response }: { response: PromptData }) => {
 	const promptData = response.prompt;
-	const trpcUtils = trpc.useContext();
-	const updatePromptMutation = trpc.prompts.updatePrompt.useMutation({
-		onSettled: async () => {
-			await trpcUtils.prompts.getPrompt.invalidate({ promptId: promptData.promptId });
-		},
-	});
+	const queryClient = useQueryClient();
+	const updatePromptMutation = useMutation(
+		orpc.prompts.updatePrompt.mutationOptions({
+			onSettled: async () => {
+				await queryClient.invalidateQueries({
+					queryKey: orpc.prompts.getPrompt.key({ input: { promptId: promptData.promptId } }),
+				});
+			},
+		})
+	);
 	const privacyLevel = updatePromptMutation.variables?.privacyLevel || promptData.privacyLevel;
 	return (
 		<>
@@ -351,7 +358,7 @@ const ShareDialog = ({ response }: { response: RouterOutput['prompts']['getPromp
 						id="promptPrivacyLevel"
 						className="block w-full rounded-md border border-gray-300 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 disabled:opacity-50 sm:text-sm"
 						value={privacyLevel}
-						disabled={updatePromptMutation.isLoading}
+						disabled={updatePromptMutation.isPending}
 						onChange={(e) => {
 							updatePromptMutation.mutate({
 								promptId: promptData.promptId,

@@ -1,5 +1,5 @@
+import { ORPCError } from '@orpc/server';
 import type { User } from '@propelauth/node';
-import { TRPCError } from '@trpc/server';
 import { and, eq, or, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
@@ -12,13 +12,7 @@ import { trackEvent } from '../../posthog';
 import { propelauth } from '../../propelauth';
 import { usersToPublicUserInfo } from '../../publicUserInfo';
 import { getStripeConfig, searchSubscriptionsByOrgId } from '../../stripe';
-import {
-	apiProcedure,
-	authProcedure,
-	createTRPCRouter,
-	orgProcedure,
-	publicProcedure,
-} from '../trpc';
+import { apiProcedure, authProcedure, orgIdInput, orgProcedure, publicProcedure } from '../trpc';
 
 const messageSchema = z.object({
 	role: z.union([z.literal('user'), z.literal('assistant'), z.literal('system')]),
@@ -33,15 +27,15 @@ const privacyLevelSchema = z.union([
 ]);
 export type PromptPrivacyLevel = z.infer<typeof privacyLevelSchema>;
 
-export const promptsRouter = createTRPCRouter({
+export const promptsRouter = {
 	getPrompt: apiProcedure
 		.input(
 			z.object({
 				promptId: z.string(),
 			})
 		)
-		.query(async ({ input, ctx }) => {
-			const user = await ctx.userPromise;
+		.handler(async ({ input, context }) => {
+			const user = await context.userPromise;
 			const userData = user.kind === 'ok' ? user.user : undefined;
 			const userId = userData?.userId;
 			const res = await db
@@ -67,8 +61,7 @@ export const promptsRouter = createTRPCRouter({
 				.where(eq(prompts.promptId, input.promptId));
 			const originalPrompt = res[0];
 			if (!originalPrompt) {
-				throw new TRPCError({
-					code: 'NOT_FOUND',
+				throw new ORPCError('NOT_FOUND', {
 					message: `Prompt ${input.promptId} not found`,
 				});
 			}
@@ -80,13 +73,11 @@ export const promptsRouter = createTRPCRouter({
 			const error = checkAccessToPrompt(prompt, userData);
 			if (error) {
 				if (error === 'UNAUTHORIZED') {
-					throw new TRPCError({
-						code: 'UNAUTHORIZED',
+					throw new ORPCError('UNAUTHORIZED', {
 						message: `You need to sign in to access this prompt`,
 					});
 				} else {
-					throw new TRPCError({
-						code: 'FORBIDDEN',
+					throw new ORPCError('FORBIDDEN', {
 						message: `You don't have access to this prompt`,
 					});
 				}
@@ -109,43 +100,45 @@ export const promptsRouter = createTRPCRouter({
 					tags: validTags.success ? validTags.data : [],
 				},
 				author,
-				shareUrl: new URL(ctx.req.url).origin + '/app/prompts/' + prompt.promptId,
-				publicUrl: new URL(ctx.req.url).origin + '/prompts/' + prompt.promptId,
+				shareUrl: new URL(context.req.url).origin + '/app/prompts/' + prompt.promptId,
+				publicUrl: new URL(context.req.url).origin + '/prompts/' + prompt.promptId,
 			};
 		}),
-	getPrompts: orgProcedure.query(async ({ ctx }) => {
-		const p = (x: PromptPrivacyLevel) => x;
-		const promptsRes = await db
-			.select()
-			.from(prompts)
-			.where(
-				and(
-					eq(prompts.orgId, ctx.requiredOrgId),
-					or(
-						eq(prompts.privacyLevel, p('public')),
-						eq(prompts.privacyLevel, p('unlisted')),
-						eq(prompts.privacyLevel, p('team')),
-						and(eq(prompts.privacyLevel, p('private')), eq(prompts.userId, ctx.user.userId))
+	getPrompts: orgProcedure
+		.input(z.object({ ...orgIdInput }).optional())
+		.handler(async ({ context }) => {
+			const p = (x: PromptPrivacyLevel) => x;
+			const promptsRes = await db
+				.select()
+				.from(prompts)
+				.where(
+					and(
+						eq(prompts.orgId, context.requiredOrgId),
+						or(
+							eq(prompts.privacyLevel, p('public')),
+							eq(prompts.privacyLevel, p('unlisted')),
+							eq(prompts.privacyLevel, p('team')),
+							and(eq(prompts.privacyLevel, p('private')), eq(prompts.userId, context.user.userId))
+						)
 					)
-				)
-			);
-		const userIds = new Set<string>();
-		promptsRes.forEach((x) => userIds.add(x.userId));
-		const users = await resolvePropelPublicUsers([...userIds]);
-		if (users.kind === 'error') {
-			console.error('Error fetching users', users.error);
-		}
-		return promptsRes.map((x) => ({
-			promptId: x.promptId,
-			userId: x.userId,
-			title: x.title,
-			isPublic: x.privacyLevel === 'public',
-			_meta: {
-				user: users.kind === 'ok' ? users.users[x.userId] : undefined,
-			},
-		}));
-	}),
-	getPublicPrompts: publicProcedure.query(async () => {
+				);
+			const userIds = new Set<string>();
+			promptsRes.forEach((x) => userIds.add(x.userId));
+			const users = await resolvePropelPublicUsers([...userIds]);
+			if (users.kind === 'error') {
+				console.error('Error fetching users', users.error);
+			}
+			return promptsRes.map((x) => ({
+				promptId: x.promptId,
+				userId: x.userId,
+				title: x.title,
+				isPublic: x.privacyLevel === 'public',
+				_meta: {
+					user: users.kind === 'ok' ? users.users[x.userId] : undefined,
+				},
+			}));
+		}),
+	getPublicPrompts: publicProcedure.handler(async () => {
 		const promptsRes = await db
 			.select()
 			.from(prompts)
@@ -161,6 +154,7 @@ export const promptsRouter = createTRPCRouter({
 	updatePrompt: orgProcedure
 		.input(
 			z.object({
+				...orgIdInput,
 				promptId: z.string(),
 				title: z.string().optional(),
 				description: z.string().optional(),
@@ -169,12 +163,11 @@ export const promptsRouter = createTRPCRouter({
 				privacyLevel: privacyLevelSchema,
 			})
 		)
-		.mutation(async ({ ctx, input }) => {
+		.handler(async ({ context, input }) => {
 			const title = input.title || 'Untitled';
 			const description = input.description || '';
 			const tags = (input.tags || []).map((x) => x.trim()).filter((x) => x.length > 0);
 			const template = input.template satisfies Message[];
-			// TODO: check user and org access
 			{
 				const x = await db
 					.select({
@@ -184,25 +177,23 @@ export const promptsRouter = createTRPCRouter({
 					.where(eq(prompts.promptId, input.promptId));
 				const prompt = x[0];
 				if (!prompt) {
-					throw new TRPCError({
-						code: 'NOT_FOUND',
+					throw new ORPCError('NOT_FOUND', {
 						message: 'Prompt not found',
 					});
 				}
 
-				if (prompt?.userId !== ctx.user.userId) {
-					throw new TRPCError({
-						code: 'FORBIDDEN',
+				if (prompt?.userId !== context.user.userId) {
+					throw new ORPCError('FORBIDDEN', {
 						message: 'You can only update your own prompts, try saving a copy instead.',
 					});
 				}
 			}
-			trackEvent(ctx.user, 'prompt_updated');
+			trackEvent(context.user, 'prompt_updated');
 			await db
 				.update(prompts)
 				.set({
-					orgId: ctx.requiredOrgId,
-					userId: ctx.user.userId,
+					orgId: context.requiredOrgId,
+					userId: context.user.userId,
 					privacyLevel: input.privacyLevel,
 					title,
 					description,
@@ -216,6 +207,7 @@ export const promptsRouter = createTRPCRouter({
 	createPrompt: orgProcedure
 		.input(
 			z.object({
+				...orgIdInput,
 				title: z.string().optional(),
 				description: z.string().optional(),
 				tags: z.array(z.string()),
@@ -223,17 +215,17 @@ export const promptsRouter = createTRPCRouter({
 				privacyLevel: privacyLevelSchema,
 			})
 		)
-		.mutation(async ({ ctx, input }) => {
+		.handler(async ({ context, input }) => {
 			const title = input.title || 'Untitled';
 			const description = input.description || '';
 			const tags = (input.tags || []).map((x) => x.trim()).filter((x) => x.length > 0);
 			const template = input.template satisfies Message[];
-			trackEvent(ctx.user, 'prompt_created');
+			trackEvent(context.user, 'prompt_created');
 			const promptId = nanoid();
 			await db.insert(prompts).values({
-				orgId: ctx.requiredOrgId,
+				orgId: context.requiredOrgId,
 				promptId,
-				userId: ctx.user.userId,
+				userId: context.user.userId,
 				privacyLevel: input.privacyLevel,
 				title,
 				description,
@@ -242,7 +234,7 @@ export const promptsRouter = createTRPCRouter({
 			});
 			await db.insert(promptLikes).values({
 				promptId,
-				userId: ctx.user.userId,
+				userId: context.user.userId,
 			});
 			return promptId;
 		}),
@@ -252,7 +244,7 @@ export const promptsRouter = createTRPCRouter({
 				promptId: z.string(),
 			})
 		)
-		.mutation(async ({ ctx, input }) => {
+		.handler(async ({ context, input }) => {
 			const x = await db
 				.select({
 					userId: prompts.userId,
@@ -261,15 +253,13 @@ export const promptsRouter = createTRPCRouter({
 				.where(eq(prompts.promptId, input.promptId));
 			const prompt = x[0];
 			if (!prompt) {
-				throw new TRPCError({
-					code: 'NOT_FOUND',
+				throw new ORPCError('NOT_FOUND', {
 					message: 'Prompt not found',
 				});
 			}
 
-			if (prompt.userId !== ctx.user.userId) {
-				throw new TRPCError({
-					code: 'FORBIDDEN',
+			if (prompt.userId !== context.user.userId) {
+				throw new ORPCError('FORBIDDEN', {
 					message: 'You can only delete your own prompts',
 				});
 			}
@@ -281,10 +271,11 @@ export const promptsRouter = createTRPCRouter({
 	runPrompt: orgProcedure
 		.input(
 			z.object({
+				...orgIdInput,
 				messages: z.array(z.object({ role: z.string(), content: z.string() })),
 			})
 		)
-		.mutation(async ({ ctx, input }) => {
+		.handler(async ({ context, input }) => {
 			const keys = await db
 				.select({
 					keyId: gptKeys.keyId,
@@ -292,7 +283,7 @@ export const promptsRouter = createTRPCRouter({
 					keyType: gptKeys.keyType,
 				})
 				.from(gptKeys)
-				.where(eq(gptKeys.orgId, ctx.requiredOrgId))
+				.where(eq(gptKeys.orgId, context.requiredOrgId))
 				.orderBy(gptKeys.createdAt);
 			const key = keys[0];
 
@@ -310,21 +301,20 @@ export const promptsRouter = createTRPCRouter({
 				secretKey = key.keySecret;
 			} else {
 				if (!serverEnv.OPENAI_API_KEY) {
-					throw new TRPCError({
-						code: 'NOT_FOUND',
+					throw new ORPCError('NOT_FOUND', {
 						message: 'No OpenAI key found for this organization',
 					});
 				} else {
 					let hasSubscription = false;
-					if (ctx.requiredOrgId) {
+					if (context.requiredOrgId) {
 						const stripeConfig = getStripeConfig();
 						if (stripeConfig) {
-							const res = await searchSubscriptionsByOrgId(stripeConfig, ctx.requiredOrgId);
+							const res = await searchSubscriptionsByOrgId(stripeConfig, context.requiredOrgId);
 							hasSubscription = res.some(({ active }) => active === true);
 						}
 					}
 
-					const remaining = await rateLimitUpsert(ctx.user.userId, Date.now());
+					const remaining = await rateLimitUpsert(context.user.userId, Date.now());
 
 					if (hasSubscription || remaining > 0) {
 						secretKey = serverEnv.OPENAI_API_KEY;
@@ -332,8 +322,7 @@ export const promptsRouter = createTRPCRouter({
 						const message = serverEnv.STRIPE_SECRET_KEY
 							? 'You have exceeded your daily rate limit. To fix this, add your own OpenAI key or purchase a subscription.'
 							: 'You have exceeded your daily rate limit. To fix this, add your own OpenAI key.';
-						throw new TRPCError({
-							code: 'TOO_MANY_REQUESTS',
+						throw new ORPCError('TOO_MANY_REQUESTS', {
 							message,
 						});
 					}
@@ -371,14 +360,16 @@ export const promptsRouter = createTRPCRouter({
 			return { message: choice.message.content };
 		}),
 
-	getDefaultKey: authProcedure.query(async ({ ctx }) => {
+	getDefaultKey: authProcedure.handler(async ({ context }) => {
 		if (serverEnv.OPENAI_API_KEY) {
 			const usage = await db
 				.select({
 					value: sharedKeyRatelimit.value,
 				})
 				.from(sharedKeyRatelimit)
-				.where(eq(sharedKeyRatelimit.limitId, rateLimitSharedKeyId(ctx.user.userId, Date.now())));
+				.where(
+					eq(sharedKeyRatelimit.limitId, rateLimitSharedKeyId(context.user.userId, Date.now()))
+				);
 			const spent = usage[0]?.value ?? 0;
 			return {
 				isSet: true,
@@ -397,9 +388,8 @@ export const promptsRouter = createTRPCRouter({
 				unlike: z.boolean().optional(),
 			})
 		)
-		.mutation(async ({ ctx, input }) => {
-			// you can like any prompt, even if you don't have access to it or it doesn't exist
-			const userId = ctx.user.userId;
+		.handler(async ({ context, input }) => {
+			const userId = context.user.userId;
 			if (input.unlike) {
 				await db
 					.delete(promptLikes)
@@ -414,7 +404,7 @@ export const promptsRouter = createTRPCRouter({
 				return input;
 			}
 		}),
-});
+};
 
 // const period = 1000 * 5; // 5 seconds
 const period = 1000 * 60 * 60 * 24; // 24 hours
@@ -428,11 +418,7 @@ function rateLimitSharedKeyResetsAt(currentTimestamp: number) {
 	return Math.ceil(currentTimestamp / period) * period;
 }
 
-/**
- * @returns the number of requests remaining
- */
 async function rateLimitUpsert(userId: string, currentTimestamp: number) {
-	// will do UPSERT
 	const result = await db
 		.insert(sharedKeyRatelimit)
 		.values({
@@ -453,7 +439,6 @@ async function rateLimitUpsert(userId: string, currentTimestamp: number) {
 		throw new Error('No result from UPSERT');
 	}
 
-	// +1 to get the value that we had before the UPSERT
 	return limit - first.value + 1;
 }
 
@@ -479,23 +464,18 @@ function checkAccessToPrompt(
 ) {
 	const privacyLevel = prompt.privacyLevel;
 
-	// everyone can access public and unlisted prompts
 	if (privacyLevel === 'public' || privacyLevel === 'unlisted') {
 		return undefined;
 	}
-	// you need to be signed in to access private or team prompts
 	if (!user) {
 		return 'UNAUTHORIZED';
 	}
-	// owners can access their own prompts
 	if (prompt.userId === user.userId) {
 		return undefined;
 	}
-	// no one else can access private prompts
 	if (privacyLevel === 'private') {
 		return 'FORBIDDEN';
 	}
-	// you need to be in the same team to access team prompts
 	if (privacyLevel === 'team') {
 		const hasAccess = user.orgIdToOrgMemberInfo?.[prompt.orgId] !== undefined;
 		if (hasAccess) {

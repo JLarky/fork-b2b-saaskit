@@ -1,12 +1,11 @@
-import { useQueryClient } from '@tanstack/react-query';
-import { getQueryKey } from '@trpc/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 import { websiteTitle } from '../../constants';
 import { useRequireActiveOrg } from '../propelauth';
-import { trpc } from '../trpc';
+import { orpc } from '../trpc';
 import { Layout } from './Layout';
 import { CopyToClipboardBtn, JsonSnippet } from './Prompt';
 import {
@@ -169,7 +168,7 @@ export const EditPromptControls = ({
 	setTitle,
 	setHasEdits,
 }: {
-	promptId?: string; // if present, edit existing prompt
+	promptId?: string;
 	promptName?: string;
 	promptDescription?: string;
 	promptTags?: string[];
@@ -201,11 +200,13 @@ export const EditPromptControls = ({
 		return detectTemplates(messages);
 	}, [messages]);
 
-	const runPromptMutation = trpc.prompts.runPrompt.useMutation({
-		onSettled: () => {
-			queryClient.invalidateQueries(getQueryKey(trpc.prompts.getDefaultKey));
-		},
-	});
+	const runPromptMutation = useMutation(
+		orpc.prompts.runPrompt.mutationOptions({
+			onSettled: () => {
+				queryClient.invalidateQueries({ queryKey: orpc.prompts.getDefaultKey.key() });
+			},
+		})
+	);
 
 	const runPromptMutationNewMessage = () =>
 		runPromptMutation.mutate(
@@ -263,35 +264,41 @@ export const EditPromptControls = ({
 
 	const navigate = useNavigate();
 
-	const addPromptMutation = trpc.prompts.createPrompt.useMutation({
-		onSettled: () => {
-			queryClient.invalidateQueries(getQueryKey(trpc.prompts.getPrompts));
-		},
-		onSuccess: (promptId) => {
-			navigate(`/app/prompts/${promptId}`);
-		},
-	});
+	const addPromptMutation = useMutation(
+		orpc.prompts.createPrompt.mutationOptions({
+			onSettled: () => {
+				queryClient.invalidateQueries({ queryKey: orpc.prompts.getPrompts.key() });
+			},
+			onSuccess: (promptId) => {
+				navigate(`/app/prompts/${promptId}`);
+			},
+		})
+	);
 	const [saved, setSaved] = useState<string>();
-	const updatePromptMutation = trpc.prompts.updatePrompt.useMutation({
-		onSettled: () => {
-			queryClient.invalidateQueries(getQueryKey(trpc.prompts.getPrompts));
-		},
-		onSuccess: (promptId) => {
-			setSaved(promptId);
-			setTimeout(() => setSaved((x) => (x === promptId ? undefined : x)), 500);
-		},
-	});
+	const updatePromptMutation = useMutation(
+		orpc.prompts.updatePrompt.mutationOptions({
+			onSettled: () => {
+				queryClient.invalidateQueries({ queryKey: orpc.prompts.getPrompts.key() });
+			},
+			onSuccess: (promptId) => {
+				setSaved(promptId);
+				setTimeout(() => setSaved((x) => (x === promptId ? undefined : x)), 500);
+			},
+		})
+	);
 
-	const promptIsBeingSaved = addPromptMutation.isLoading || updatePromptMutation.isLoading;
+	const promptIsBeingSaved = addPromptMutation.isPending || updatePromptMutation.isPending;
 
-	const deletePromptMutation = trpc.prompts.deletePrompt.useMutation({
-		onSuccess: () => {
-			navigate(`/app/prompts`);
-		},
-		onSettled: () => {
-			queryClient.invalidateQueries(getQueryKey(trpc.prompts.getPrompts));
-		},
-	});
+	const deletePromptMutation = useMutation(
+		orpc.prompts.deletePrompt.mutationOptions({
+			onSuccess: () => {
+				navigate(`/app/prompts`);
+			},
+			onSettled: () => {
+				queryClient.invalidateQueries({ queryKey: orpc.prompts.getPrompts.key() });
+			},
+		})
+	);
 
 	const [newIsPublic, setNewIsPublic] = useState<boolean | undefined>(undefined);
 
@@ -300,7 +307,7 @@ export const EditPromptControls = ({
 	return (
 		<div className="mb-36 mt-4 flex flex-col gap-10">
 			<div className="flex flex-col gap-4">
-				<InProgress show={runPromptMutation.isLoading} />
+				<InProgress show={runPromptMutation.isPending} />
 				<fieldset className="flex flex-col gap-8 bg-gradient-to-r">
 					<div>
 						<legend className="text-lg font-medium text-gray-900">Messages</legend>
@@ -361,7 +368,7 @@ export const EditPromptControls = ({
 															const newMessages = structuredClone(messages);
 															const x = newMessages[index];
 															if (x) {
-																messageKeys.set(x, key); // to preserve key
+																messageKeys.set(x, key);
 																x.role = action;
 															}
 															return newMessages;
@@ -393,7 +400,7 @@ export const EditPromptControls = ({
 											const newMessages = structuredClone(messages);
 											const x = newMessages[index];
 											if (x) {
-												messageKeys.set(x, key); // to preserve the same key
+												messageKeys.set(x, key);
 												x.content = newText;
 											}
 											return newMessages;
@@ -452,7 +459,7 @@ export const EditPromptControls = ({
 						name="generate"
 						disabled={
 							(!hasSubscription && !hasAnyKey) ||
-							runPromptMutation.isLoading ||
+							runPromptMutation.isPending ||
 							!messages.find((x) => x.content.trim().length > 0)
 						}
 					>
@@ -495,7 +502,7 @@ export const EditPromptControls = ({
 					{runPromptMutation.error && (
 						<div className="flex items-center gap-3">
 							<div className="text-sm text-red-500">{runPromptMutation.error.message}</div>
-							{runPromptMutation?.error?.data?.code === 'TOO_MANY_REQUESTS' && (
+							{(runPromptMutation.error as any)?.code === 'TOO_MANY_REQUESTS' && (
 								<a
 									className="text-blue-700 underline visited:text-purple-600 hover:text-rose-600"
 									href="/app/settings"
@@ -658,7 +665,7 @@ export const EditPromptControls = ({
 									disabled={promptIsBeingSaved}
 									name="save"
 								>
-									{promptId && (updatePromptMutation.isLoading ? 'Saving' : 'Save')}
+									{promptId && (updatePromptMutation.isPending ? 'Saving' : 'Save')}
 								</button>
 							)}
 							<button
@@ -669,13 +676,13 @@ export const EditPromptControls = ({
 							>
 								{isPublic ? (
 									<>
-										{promptId && (addPromptMutation.isLoading ? 'Publishing' : 'Publish as a copy')}
-										{!promptId && (addPromptMutation.isLoading ? 'Publishing' : 'Publish')}
+										{promptId && (addPromptMutation.isPending ? 'Publishing' : 'Publish as a copy')}
+										{!promptId && (addPromptMutation.isPending ? 'Publishing' : 'Publish')}
 									</>
 								) : (
 									<>
-										{promptId && (addPromptMutation.isLoading ? 'Saving' : 'Save as a copy')}
-										{!promptId && (addPromptMutation.isLoading ? 'Creating' : 'Create')}
+										{promptId && (addPromptMutation.isPending ? 'Saving' : 'Save as a copy')}
+										{!promptId && (addPromptMutation.isPending ? 'Creating' : 'Create')}
 									</>
 								)}
 							</button>
@@ -683,7 +690,7 @@ export const EditPromptControls = ({
 								<button
 									className="min-w-[6rem] rounded bg-red-500 px-4 py-2 font-medium text-white hover:bg-red-700 disabled:opacity-50"
 									type="button"
-									disabled={deletePromptMutation.isLoading}
+									disabled={deletePromptMutation.isPending}
 									onClick={() => {
 										const confirmed = confirm('Are you sure you want to delete this prompt?');
 										if (confirmed) {
@@ -692,7 +699,7 @@ export const EditPromptControls = ({
 									}}
 								>
 									Delete
-									{deletePromptMutation.isLoading ? 'ing' : ''}
+									{deletePromptMutation.isPending ? 'ing' : ''}
 								</button>
 							)}
 							<span
@@ -730,11 +737,16 @@ function onMount(el: HTMLTextAreaElement | null) {
 function useKeys() {
 	const { activeOrg } = useRequireActiveOrg();
 	const orgId = activeOrg?.orgId || '';
-	const keysQuery = trpc.settings.getKeys.useQuery({ orgId }, { enabled: !!orgId });
+	const keysQuery = useQuery(
+		orpc.settings.getKeys.queryOptions({ input: { orgId }, enabled: !!orgId })
+	);
 	const hasKey = keysQuery.data === undefined ? undefined : (keysQuery.data?.length || 0) !== 0;
-	const defaultKeyQuery = trpc.prompts.getDefaultKey.useQuery(undefined, {
-		enabled: !!orgId && keysQuery.isSuccess && !hasKey,
-	});
+	const defaultKeyQuery = useQuery(
+		orpc.prompts.getDefaultKey.queryOptions({
+			input: undefined,
+			enabled: !!orgId && keysQuery.isSuccess && !hasKey,
+		})
+	);
 
 	const hasAnyKey = hasKey || (defaultKeyQuery.data?.isSet && !!defaultKeyQuery.data.canUse);
 	const defaultKeyData = defaultKeyQuery.data;
@@ -748,9 +760,11 @@ function useKeys() {
 function useSubscriptions() {
 	const { activeOrg } = useRequireActiveOrg();
 	const orgId = activeOrg?.orgId || '';
-	const { data: subscriptions } = trpc.settings.getSubscriptions.useQuery(
-		{ orgId },
-		{ enabled: !!orgId }
+	const { data: subscriptions } = useQuery(
+		orpc.settings.getSubscriptions.queryOptions({
+			input: { orgId },
+			enabled: !!orgId,
+		})
 	);
 	const hasSubscription = subscriptions === undefined ? false : subscriptions.some((s) => s.active);
 

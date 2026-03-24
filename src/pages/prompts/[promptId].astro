@@ -11,8 +11,8 @@ if (res.kind === 'response') {
 	return res.response;
 }
 
-const x = await res.helpers.prompts.getPrompt
-	.fetch({ promptId: Astro.params.promptId! })
+const x = await res.helpers.client.prompts
+	.getPrompt({ promptId: Astro.params.promptId! })
 	.then((prompt) => ({ kind: 'ok' as const, prompt }))
 	.catch((error) => ({ kind: 'error' as const, error }));
 

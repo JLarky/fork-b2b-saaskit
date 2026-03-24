@@ -2,6 +2,8 @@ import type { User } from '@propelauth/node';
 import { OrgMemberInfo } from '@propelauth/node';
 import { vi } from 'vitest';
 
+import type { CreateContextOptions } from '../trpc';
+
 // Store mock functions so they're accessible from fakeAuthContext
 export const mockValidateAccessTokenAndGetUser = vi.fn();
 export const mockFetchBatchUserMetadataByUserIds = vi.fn().mockResolvedValue({});
@@ -37,11 +39,11 @@ export function fakeUser(overrides: Partial<User> & { userId: string; orgId?: st
 }
 
 /**
- * Build a fake Request + Headers that satisfies apiProcedure middleware.
+ * Build a fake context that satisfies apiProcedure middleware.
  * The cookies encode a fake access token and org id so that
  * authProcedure / orgProcedure can extract them.
  */
-export function fakeAuthContext(user: User, orgId: string) {
+export function fakeAuthContext(user: User, orgId: string): CreateContextOptions {
 	const accessToken = 'fake-access-token';
 	const httpOnlyCookie = new URLSearchParams({ accessToken }).toString();
 	const publicCookie = new URLSearchParams({

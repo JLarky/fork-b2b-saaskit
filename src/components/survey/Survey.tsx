@@ -1,3 +1,4 @@
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { StrictMode, useEffect, useState } from 'react';
 import {
 	createBrowserRouter,
@@ -9,7 +10,7 @@ import {
 	useSearchParams,
 } from 'react-router-dom';
 
-import { trpc, TRPCProvider } from '../trpc';
+import { orpc, TRPCProvider } from '../trpc';
 
 const routes = () => [
 	{
@@ -134,7 +135,7 @@ function OptionalComments() {
 	const [search] = useSearchParams();
 	const rating = search.get('rating') || '';
 	const validRating = validateRating(rating);
-	const postSurveyMutation = trpc.surveys.postSurvey.useMutation();
+	const postSurveyMutation = useMutation(orpc.surveys.postSurvey.mutationOptions());
 	if (validRating === undefined) {
 		return <Navigate to="/survey/rate-experience" />;
 	}
@@ -179,17 +180,17 @@ function OptionalComments() {
 				{postSurveyMutation.isError && (
 					<p className="mb-2 rounded-md bg-red-100 p-2 text-red-500">
 						Error!{' '}
-						{postSurveyMutation.error.data?.code === 'BAD_REQUEST'
+						{(postSurveyMutation.error as any)?.code === 'BAD_REQUEST'
 							? 'Invlid form data'
 							: 'Unknown error'}
 					</p>
 				)}
 				<button
-					disabled={postSurveyMutation.isLoading || isTooLong}
+					disabled={postSurveyMutation.isPending || isTooLong}
 					type="submit"
 					className="w-full rounded-md bg-blue-500 px-3 py-2 text-white hover:bg-blue-600 disabled:opacity-50"
 				>
-					Submit{postSurveyMutation.isLoading ? 'ting' : ''}
+					Submit{postSurveyMutation.isPending ? 'ting' : ''}
 				</button>
 			</form>
 			<Link
@@ -214,14 +215,6 @@ function ThankYou() {
 	);
 }
 
-/**
- * This is a custom hook that will wait for 350ms before returning `true`
- * This relies on the fact that Chrome will show the old page for almost
- * half a second before showing the new page. So showing completely blank
- * page (return null) will actually provide a better user experience
- * compared to showing loading spinner or a skeleton 🤯
- */
-
 function useWaited() {
 	const [waited, setWaited] = useState(false);
 	useEffect(() => {
@@ -233,10 +226,10 @@ function useWaited() {
 }
 
 function Published() {
-	const postSurveyMutation = trpc.surveys.getPublic.useQuery();
+	const surveysQuery = useQuery(orpc.surveys.getPublic.queryOptions({ input: undefined }));
 
 	const waited = useWaited();
-	if (!waited && postSurveyMutation.isLoading) {
+	if (!waited && surveysQuery.isLoading) {
 		return null;
 	}
 
@@ -251,13 +244,13 @@ function Published() {
 			</Link>
 			<div className="my-4 w-full sm:w-[500px] lg:w-[800px]">
 				<h3 className="mb-2 text-xl">
-					{!postSurveyMutation.isLoading && postSurveyMutation.data?.length === 0
+					{!surveysQuery.isLoading && surveysQuery.data?.length === 0
 						? 'No comments yet'
 						: 'Comments'}
 				</h3>
 				<ul className="list-inside list-disc">
-					{postSurveyMutation.isLoading && <li>Loading...</li>}
-					{postSurveyMutation.data?.map((survey) => (
+					{surveysQuery.isLoading && <li>Loading...</li>}
+					{surveysQuery.data?.map((survey) => (
 						<li key={survey.id}>
 							{survey.rating} out of 5 on {survey.createdAt.toLocaleString()}
 							{survey.comments && (

@@ -7,7 +7,7 @@ import type { Helpers } from '../../lib/trpc/root';
 import { AuthSync } from '../AuthSync';
 import { FullPageSupport, SupportWidget } from '../fogbender/Support';
 import { AuthProvider } from '../propelauth';
-import type { RouterUtils } from '../trpc';
+import { orpc } from '../trpc';
 import { App } from './App';
 import { CreatePrompt } from './CreatePrompt';
 import { EditPrompt } from './EditPrompt';
@@ -23,9 +23,12 @@ export const routes: RemixBrowserContext & RouteObject[] = [
 		loader: async ({ params }) => {
 			const promptId = params.promptId;
 			if (promptId) {
-				// pre-fetch in SSR is done oustide of the loader in .astro file
-				// pre-fetch in browser
-				await routes.trpcUtils?.prompts.getPrompt.ensureData({ promptId }).catch(() => {});
+				// pre-fetch in browser — warm the React Query cache
+				if (routes.orpcUtils && routes.queryClient) {
+					await routes.queryClient
+						.prefetchQuery(routes.orpcUtils.prompts.getPrompt.queryOptions({ input: { promptId } }))
+						.catch(() => {});
+				}
 			}
 			return null;
 		},
@@ -57,9 +60,17 @@ export const routes: RemixBrowserContext & RouteObject[] = [
 				path: '/app/prompts',
 				loader: async ({ context }) => {
 					// pre-fetch in SSR
-					await context?.helpers.prompts.getPrompts.prefetch({});
+					if (context?.helpers) {
+						await context.helpers.queryClient.prefetchQuery(
+							context.helpers.orpc.prompts.getPrompts.queryOptions({ input: {} })
+						);
+					}
 					// pre-fetch in browser
-					await routes.trpcUtils?.prompts.getPrompts.ensureData({}).catch(() => {});
+					if (routes.orpcUtils && routes.queryClient) {
+						await routes.queryClient
+							.prefetchQuery(routes.orpcUtils.prompts.getPrompts.queryOptions({ input: {} }))
+							.catch(() => {});
+					}
 					return null;
 				},
 				Component() {
@@ -72,9 +83,19 @@ export const routes: RemixBrowserContext & RouteObject[] = [
 					const promptId = params.promptId;
 					if (promptId) {
 						// pre-fetch in SSR
-						await context?.helpers.prompts.getPrompt.prefetch({ promptId });
+						if (context?.helpers) {
+							await context.helpers.queryClient.prefetchQuery(
+								context.helpers.orpc.prompts.getPrompt.queryOptions({ input: { promptId } })
+							);
+						}
 						// pre-fetch in browser
-						await routes.trpcUtils?.prompts.getPrompt.ensureData({ promptId }).catch(() => {});
+						if (routes.orpcUtils && routes.queryClient) {
+							await routes.queryClient
+								.prefetchQuery(
+									routes.orpcUtils.prompts.getPrompt.queryOptions({ input: { promptId } })
+								)
+								.catch(() => {});
+						}
 					}
 					return null;
 				},
@@ -110,13 +131,13 @@ export const routes: RemixBrowserContext & RouteObject[] = [
 	},
 ];
 
-// browser-only context
+// browser-only context: uses client-side oRPC utils
 export type RemixBrowserContext = {
-	trpcUtils?: RouterUtils;
+	orpcUtils?: typeof orpc;
 	queryClient?: QueryClient;
 };
 
-// server only context
+// server only context: uses server-side helpers
 export type RemixContext = {
 	helpers: Helpers;
 };

@@ -1,27 +1,29 @@
+import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 
 import { websiteTitle } from '../../constants';
-import { trpc } from '../trpc';
+import { orpc } from '../trpc';
 import { EditPromptControls } from './CreatePrompt';
 import { Layout } from './Layout';
 import { usePromptErrorPage } from './usePromptErrorPage';
 
 export function EditPrompt() {
 	const { promptId } = useParams<{ promptId: string }>();
-	const promptsQuery = trpc.prompts.getPrompt.useQuery(
-		{
-			promptId: promptId!,
-		},
-		{
+	const promptsQuery = useQuery(
+		orpc.prompts.getPrompt.queryOptions({
+			input: { promptId: promptId! },
 			enabled: !!promptId,
 			staleTime: 1000,
 			retry: (retry, error) => {
-				return retry < 3 && !error.data?.code;
+				return retry < 3 && !(error as any)?.code;
 			},
-		}
+		})
 	);
 
-	const errorPage = usePromptErrorPage(promptsQuery.status, promptsQuery.error?.data?.code);
+	const errorPage = usePromptErrorPage(
+		promptsQuery.status,
+		(promptsQuery.error as any)?.data?.code
+	);
 
 	if (errorPage) {
 		return errorPage;
