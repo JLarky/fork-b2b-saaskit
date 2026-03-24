@@ -67,6 +67,7 @@ B2B companies are fairly common - for example, over 40% of <a href="https://www.
 git clone https://github.com/fogbender/b2b-saaskit.git
 cd b2b-saaskit
 corepack enable
+corepack install
 pnpm install
 pnpm dev
 ```

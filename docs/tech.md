@@ -5,6 +5,7 @@
 ```bash
 # First-time setup
 corepack enable
+corepack install
 pnpm install
 
 # Astro type generation/sync
