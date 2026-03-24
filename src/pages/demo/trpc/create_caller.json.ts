@@ -14,7 +14,7 @@ export const ALL: APIRoute = async ({ request }) => {
 	const title = `Create Caller / ${callerExample}`;
 	return new Response(
 		JSON.stringify({
-			what: 'I can even use tRPC from API endpoints, maybe in case you need to have some third-party public API',
+			what: 'I can even use oRPC from API endpoints, maybe in case you need to have some third-party public API',
 			title,
 		}),
 		{

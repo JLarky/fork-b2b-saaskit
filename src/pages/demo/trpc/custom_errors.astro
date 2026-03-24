@@ -1,6 +1,5 @@
 ---
-import { TRPCError } from '@trpc/server';
-import { getHTTPStatusCodeFromError } from '@trpc/server/http';
+import { ORPCError } from '@orpc/server';
 
 import AppLayout from '../../../components/app/AppLayout.astro';
 import { Root } from '../../../components/app/Root';
@@ -10,13 +9,13 @@ export const prerender = false; // to allow dynamic title per user
 
 const helpers = createHelpers(Astro);
 // prefetch data for client, and redirect to login if not logged in
-const error = await helpers.prompts.getPrompts
-	.fetch({})
+const error = await helpers.client.prompts
+	.getPrompts({})
 	.then(() => {})
 	.catch((error) => error);
 
-if (error instanceof TRPCError) {
-	const httpCode = getHTTPStatusCodeFromError(error);
+if (error instanceof ORPCError) {
+	const httpCode = error.status;
 	// show error page or redirect instead of rendering the page
 	if (httpCode === 401) {
 		return Astro.redirect('/login');

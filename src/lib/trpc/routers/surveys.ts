@@ -1,13 +1,13 @@
-import { TRPCError } from '@trpc/server';
+import { ORPCError } from '@orpc/server';
 import { desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '../../../db/db';
 import { surveys } from '../../../db/schema';
-import { createTRPCRouter, publicProcedure } from '../trpc';
+import { publicProcedure } from '../trpc';
 
-export const surveysRouter = createTRPCRouter({
-	getPublic: publicProcedure.query(async () => {
+export const surveysRouter = {
+	getPublic: publicProcedure.handler(async () => {
 		return await db
 			.select({
 				id: surveys.id,
@@ -30,7 +30,7 @@ export const surveysRouter = createTRPCRouter({
 				comments: z.string().max(1500).optional(),
 			})
 		)
-		.mutation(async ({ input }) => {
+		.handler(async ({ input }) => {
 			const x = await db
 				.insert(surveys)
 				.values({
@@ -41,12 +41,11 @@ export const surveysRouter = createTRPCRouter({
 				.returning({ id: surveys.id });
 			const survey = x[0];
 			if (!survey) {
-				throw new TRPCError({
-					code: 'INTERNAL_SERVER_ERROR',
+				throw new ORPCError('INTERNAL_SERVER_ERROR', {
 					message: 'Failed to create a survey.',
 				});
 			}
 
 			return survey.id;
 		}),
-});
+};

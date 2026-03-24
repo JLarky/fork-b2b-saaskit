@@ -1,13 +1,13 @@
-import { TRPCError } from '@trpc/server';
+import { ORPCError } from '@orpc/server';
 import { serialize } from 'cookie';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 
 import { AUTH_COOKIE_NAME, HTTP_ONLY_AUTH_COOKIE_NAME } from '../../../constants';
 import { propelauth } from '../../propelauth';
-import { apiProcedure, createTRPCRouter } from '../trpc';
+import { apiProcedure } from '../trpc';
 
-export const authRouter = createTRPCRouter({
+export const authRouter = {
 	authSync: apiProcedure
 		.input(
 			z.object({
@@ -16,10 +16,10 @@ export const authRouter = createTRPCRouter({
 				orgId: z.string(),
 			})
 		)
-		.mutation(async ({ ctx, input }) => {
-			const currentCookies = ctx.parsedCookies;
+		.handler(async ({ context, input }) => {
+			const currentCookies = context.parsedCookies;
 			const set = (key: string, value: string) => {
-				ctx.resHeaders.append(
+				context.resHeaders.append(
 					'set-cookie',
 					serialize(key, value, {
 						path: '/',
@@ -44,11 +44,9 @@ export const authRouter = createTRPCRouter({
 			}
 
 			const decodedJwt = jwt.decode(input.accessToken);
-			// console.log(decodedJwt);
 			if (!decodedJwt || typeof decodedJwt === 'string') {
 				reset();
-				throw new TRPCError({
-					code: 'UNAUTHORIZED',
+				throw new ORPCError('UNAUTHORIZED', {
 					message: 'Could not decode access token.',
 				});
 			}
@@ -59,10 +57,8 @@ export const authRouter = createTRPCRouter({
 				.catch((error) => ({ kind: 'error' as const, error }));
 			if (res.kind === 'error') {
 				reset();
-				throw new TRPCError({
-					code: 'UNAUTHORIZED',
+				throw new ORPCError('UNAUTHORIZED', {
 					message: 'Could not validate access token.',
-					// optional: pass the original error to retain stack trace
 					cause: res.error,
 				});
 			}
@@ -79,4 +75,4 @@ export const authRouter = createTRPCRouter({
 			set(AUTH_COOKIE_NAME, '' + new URLSearchParams(publicCookie));
 			return 'everything went well';
 		}),
-});
+};

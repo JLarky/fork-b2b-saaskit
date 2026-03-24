@@ -1,10 +1,9 @@
 import type { QueryStatus } from '@tanstack/react-query';
-import type { TRPC_ERROR_CODE_KEY } from '@trpc/server/rpc';
 import { useEffect, useState } from 'react';
 
 import { Layout } from './Layout';
 
-export function usePromptErrorPage(status: QueryStatus, errorCode?: TRPC_ERROR_CODE_KEY) {
+export function usePromptErrorPage(status: QueryStatus, errorCode?: string) {
 	// to make error message sticky when react query tries to refetch
 	const [stickyErrorCode, setStickyErrorCode] = useState(errorCode);
 	useEffect(() => {

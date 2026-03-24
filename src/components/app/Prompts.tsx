@@ -1,48 +1,47 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { Link } from 'react-router-dom';
 
 import { websiteTitle } from '../../constants';
 import { useRequireActiveOrg } from '../propelauth';
-import { trpc } from '../trpc';
+import { orpc } from '../trpc';
 import { Layout } from './Layout';
 
 export function Prompts() {
-	const trpcUtils = trpc.useContext();
+	const queryClient = useQueryClient();
 
 	const { auth, activeOrg } = useRequireActiveOrg();
 	const userId = auth.loading === false && auth.user?.userId;
 	const orgId = activeOrg?.orgId || '';
-	const promptsQuery = trpc.prompts.getPrompts.useQuery(
-		{},
-		{
+	const promptsQuery = useQuery(
+		orpc.prompts.getPrompts.queryOptions({
+			input: {},
 			enabled: !!orgId,
 			staleTime: 1000,
-		}
+		})
 	);
-	const deletePromptMutation = trpc.prompts.deletePrompt.useMutation({
-		onMutate: async ({ promptId }) => {
-			// cancel any outgoing refetches (so they don't overwrite our optimistic update)
-			await trpcUtils.prompts.getPrompts.cancel({});
-			// snapshot the previous value
-			const previousPrompts = trpcUtils.prompts.getPrompts.getData({});
-			// optimistically update to the new value
-			trpcUtils.prompts.getPrompts.setData({}, (oldData) =>
-				oldData?.filter((prompt) => prompt.promptId !== promptId)
-			);
-			// return a context object with the snapshotted value
-			return { previousPrompts };
-		},
-		// if the mutation fails, use the context returned from onMutate to roll back
-		onError: (_err, _variables, context) => {
-			if (context?.previousPrompts) {
-				trpcUtils.prompts.getPrompts.setData({}, context.previousPrompts);
-			}
-		},
-		// always refetch after error or success:
-		onSettled: () => {
-			trpcUtils.prompts.getPrompts.invalidate({});
-		},
-	});
+	const deletePromptMutation = useMutation(
+		orpc.prompts.deletePrompt.mutationOptions({
+			onMutate: async ({ promptId }) => {
+				const queryKey = orpc.prompts.getPrompts.queryKey({ input: {} });
+				await queryClient.cancelQueries({ queryKey });
+				const previousPrompts = queryClient.getQueryData(queryKey);
+				queryClient.setQueryData(queryKey, (oldData: typeof promptsQuery.data) =>
+					oldData?.filter((prompt) => prompt.promptId !== promptId)
+				);
+				return { previousPrompts };
+			},
+			onError: (_err, _variables, context) => {
+				if (context?.previousPrompts) {
+					const queryKey = orpc.prompts.getPrompts.queryKey({ input: {} });
+					queryClient.setQueryData(queryKey, context.previousPrompts);
+				}
+			},
+			onSettled: () => {
+				queryClient.invalidateQueries({ queryKey: orpc.prompts.getPrompts.key() });
+			},
+		})
+	);
 
 	return (
 		<Layout title={`${websiteTitle} / Prompts`}>
@@ -84,7 +83,7 @@ export function Prompts() {
 								key={prompt.promptId}
 								className={clsx(
 									index % 2 === 0 && 'bg-gray-50',
-									deletePromptMutation.isLoading &&
+									deletePromptMutation.isPending &&
 										deletePromptMutation.variables?.promptId === prompt.promptId &&
 										'opacity-50'
 								)}

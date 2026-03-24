@@ -1,62 +1,64 @@
 import type { UseAuthInfoLoggedInProps } from '@propelauth/react/types/useAuthInfo';
-import { useQueryClient } from '@tanstack/react-query';
-import { getQueryKey } from '@trpc/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { useReducer, useState } from 'react';
 
 import { env } from '../../config';
 import { websiteTitle } from '../../constants';
-import { apiServer, useMutation } from '../client';
+import { apiServer } from '../client';
 import { useRequireActiveOrg } from '../propelauth';
 import { useAuthInfo } from '../propelauth';
-import { trpc } from '../trpc';
+import { orpc } from '../trpc';
 import { Layout } from './Layout';
 
 export function Settings() {
 	const { activeOrg } = useRequireActiveOrg();
 	const orgId = activeOrg?.orgId;
 
-	const keysQuery = trpc.settings.getKeys.useQuery(
-		{ orgId: orgId || '' },
-		{
+	const keysQuery = useQuery(
+		orpc.settings.getKeys.queryOptions({
+			input: { orgId: orgId || '' },
 			enabled: !!orgId,
 			staleTime: 1000,
-		}
+		})
 	);
 
-	const { data: subscriptions } = trpc.settings.getSubscriptions.useQuery(
-		{ orgId: orgId || '' },
-		{
+	const { data: subscriptions } = useQuery(
+		orpc.settings.getSubscriptions.queryOptions({
+			input: { orgId: orgId || '' },
 			enabled: !!orgId,
 			staleTime: 1000,
-		}
+		})
 	);
 
-	const { data: stripeConfigured } = trpc.settings.stripeConfigured.useQuery(
-		{},
-		{
+	const { data: stripeConfigured } = useQuery(
+		orpc.settings.stripeConfigured.queryOptions({
+			input: {},
 			enabled: !!orgId,
 			staleTime: 1000,
-		}
+		})
 	);
 
 	const queryClient = useQueryClient();
-	const addKeyMutation = trpc.settings.createKey.useMutation({
-		onSettled: () => {
-			queryClient.invalidateQueries(getQueryKey(trpc.settings.getKeys));
-		},
-	});
-	const deleteKeyMutation = trpc.settings.deleteKey.useMutation({
-		onSuccess: (data) => {
-			queryClient.setQueryData(
-				getQueryKey(trpc.settings.getKeys, undefined, 'query'),
-				(oldData: typeof keysQuery.data) => oldData?.filter((item) => item.keyId !== data.keyId)
-			);
-		},
-		onSettled: () => {
-			queryClient.invalidateQueries(getQueryKey(trpc.settings.getKeys));
-		},
-	});
+	const addKeyMutation = useMutation(
+		orpc.settings.createKey.mutationOptions({
+			onSettled: () => {
+				queryClient.invalidateQueries({ queryKey: orpc.settings.getKeys.key() });
+			},
+		})
+	);
+	const deleteKeyMutation = useMutation(
+		orpc.settings.deleteKey.mutationOptions({
+			onSuccess: (data) => {
+				queryClient.setQueryData(orpc.settings.getKeys.key(), (oldData: typeof keysQuery.data) =>
+					oldData?.filter((item) => item.keyId !== data.keyId)
+				);
+			},
+			onSettled: () => {
+				queryClient.invalidateQueries({ queryKey: orpc.settings.getKeys.key() });
+			},
+		})
+	);
 
 	const [showAddKey, toggleShowAddKey] = useReducer((state) => !state, false);
 
@@ -72,7 +74,7 @@ export function Settings() {
 				.json({ orgId: activeOrg?.orgId })
 				.post()
 				.json<{ url: string }>(),
-		cacheTime: 0,
+		gcTime: 0,
 		onSuccess: ({ url }) => {
 			location.assign(url);
 		},
@@ -176,9 +178,9 @@ export function Settings() {
 								<button
 									className="max-w-min rounded-md bg-blue-500 px-4 py-2 text-white disabled:opacity-50"
 									type="submit"
-									disabled={submitOk === false || addKeyMutation.isLoading}
+									disabled={submitOk === false || addKeyMutation.isPending}
 								>
-									{addKeyMutation.isLoading
+									{addKeyMutation.isPending
 										? 'Saving...'
 										: keysQuery.data?.length
 											? 'Replace'
@@ -187,8 +189,8 @@ export function Settings() {
 								{addKeyMutation.isError && (
 									<div>
 										Error!{' '}
-										{addKeyMutation.error.data?.zodError && (
-											<pre>{JSON.stringify(addKeyMutation.error.data.zodError, null, 2)}</pre>
+										{(addKeyMutation.error as any)?.data && (
+											<pre>{JSON.stringify((addKeyMutation.error as any).data, null, 2)}</pre>
 										)}
 									</div>
 								)}
@@ -268,7 +270,7 @@ export function Settings() {
 											key={key.keyId}
 											className={clsx(
 												index % 2 === 0 && 'bg-gray-50',
-												deleteKeyMutation.isLoading &&
+												deleteKeyMutation.isPending &&
 													deleteKeyMutation.variables?.keyId === key.keyId &&
 													'opacity-50'
 											)}

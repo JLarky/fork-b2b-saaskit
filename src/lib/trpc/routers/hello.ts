@@ -1,19 +1,20 @@
-import { apiProcedure, createTRPCRouter, publicProcedure } from '../trpc';
+import { apiProcedure, publicProcedure } from '../trpc';
 
 let i = 0;
-export const helloRouter = createTRPCRouter({
-	hello: apiProcedure.query(async ({ ctx }) => {
-		const res = await ctx.userPromise;
+
+export const helloRouter = {
+	hello: apiProcedure.handler(async ({ context }) => {
+		const res = await context.userPromise;
 		if (res.kind === 'ok') {
 			return `Oh, so cool, you are already signed in! ${res.user.userId}`;
 		}
 
 		return 'Something from the server';
 	}),
-	getCount: publicProcedure.query(() => {
+	getCount: publicProcedure.handler(async () => {
 		return i;
 	}),
-	increment: publicProcedure.mutation(() => {
+	increment: publicProcedure.handler(async () => {
 		return ++i;
 	}),
-});
+};
