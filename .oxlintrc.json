@@ -65,7 +65,7 @@
       }
     },
     {
-      "files": ["src/pages/demo/htmx/*.astro", "src/components/landing/B2B.astro"],
+      "files": ["src/pages/demo/htmx/*.astro"],
       "rules": {
         "astro/no-unused-css-selector": "off"
       }

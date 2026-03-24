@@ -9,7 +9,7 @@ We've got some landing page complexity, since we're using the same codebase for 
 To replace all this with a single landing page:
 
 - `rm src/assets/free.svg src/assets/b2b7.svg`
-- `rm src/components/landing/Prod.astro src/components/landing/B2B.astro src/components/landing/Dev.astro`
+- `rm src/components/landing/Prod.astro src/components/landing/Dev.astro`
 - Replace `src/pages/index.astro` with:
 
 ```
