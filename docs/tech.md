@@ -5,37 +5,36 @@
 ```bash
 # First-time setup
 corepack enable
-corepack prepare yarn@1.22.19 --activate
-yarn
+pnpm install
 
 # Astro type generation/sync
-yarn astro sync
+pnpm astro sync
 
 # Lint + format
-yarn lint
-yarn fmt:check
+pnpm lint
+pnpm fmt:check
 
 # Auto-fix lint + formatting issues
-yarn fix
+pnpm fix
 
 # Tests
-yarn test
+pnpm test
 
 # Type checks
-yarn ci:check
+pnpm ci:check
 
 # Production build
-yarn build
+pnpm build
 
 # All-in check path used by this repo
-yarn full:check
+pnpm full:check
 ```
 
 Notes:
 
-- This repo uses Yarn Classic (`yarn.lock`), not pnpm or npm.
+- This repo uses pnpm (`pnpm-lock.yaml`), managed via corepack.
 - CI runs on Node 22 via `.github/actions/prepare/action.yml`, matching `package.json` engines `>=22.18.0`.
-- `yarn ci:check` runs `astro check && tsc --noEmit`.
+- `pnpm ci:check` runs `astro check && tsc --noEmit`.
 - CI splits checks into separate workflows for lint, formatting, tests, and TypeScript; keep local validation aligned with `.github/workflows/`.
 
 ## Repository Shape
@@ -60,7 +59,7 @@ Notes:
 ## Current Stack And Guardrails
 
 - Package manager and runtime:
-  - Use Yarn commands by default.
+  - Use pnpm commands by default.
   - Astro dev server is configured for port `3000` in `astro.config.mjs`.
 
 - Frontend:
@@ -82,13 +81,13 @@ Notes:
   - Drizzle ORM + `postgres` client are used against Postgres/Supabase-style infrastructure.
   - Schema source of truth is `src/db/schema.ts`.
   - Existing SQL migrations live in `src/db/*.sql`.
-  - Migration apply script is `yarn migrate`.
+  - Migration apply script is `pnpm migrate`.
   - Migration generation is done with `doppler run npx drizzle-kit generate`.
   - If you add a new table, manually add Row Level Security SQL to the generated migration; `src/db/schema.ts` documents the expected pattern.
 
 - Environment/secrets:
   - Environment variables are validated in `src/t3-env.ts` with `@t3-oss/env-core` + Zod.
-  - Normal local/dev workflows expect `doppler run ...`, not plain `yarn dev`.
+  - Normal local/dev workflows expect `doppler run ...`, not plain `pnpm dev`.
   - CI and local test runs use `doppler run` to inject secrets; a `DOPPLER_TOKEN` secret must be configured in the GitHub repo.
 
 - Deployment:
