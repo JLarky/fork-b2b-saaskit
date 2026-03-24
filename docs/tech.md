@@ -11,9 +11,10 @@ pnpm install
 # Astro type generation/sync
 pnpm astro sync
 
-# Lint + format
+# Lint + format + dead code
 pnpm lint
 pnpm fmt:check
+pnpm knip
 
 # Auto-fix lint + formatting issues
 pnpm fix
@@ -36,7 +37,8 @@ Notes:
 - This repo uses pnpm (`pnpm-lock.yaml`), managed via corepack.
 - CI runs on Node 22 via `.github/actions/prepare/action.yml`, matching `package.json` engines `>=22.18.0`.
 - `pnpm ci:check` runs `astro check && tsc --noEmit`.
-- CI splits checks into separate workflows for lint, formatting, tests, and TypeScript; keep local validation aligned with `.github/workflows/`.
+- CI splits checks into separate workflows for lint, formatting, dead code detection (knip), tests, and TypeScript; keep local validation aligned with `.github/workflows/`.
+- `pnpm knip` detects unused files, dependencies, and exports via static analysis. Configuration lives in `knip.json`.
 
 ## Repository Shape
 

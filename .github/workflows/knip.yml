@@ -1,0 +1,25 @@
+jobs:
+  knip:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout actions
+        uses: actions/checkout@v4
+      - name: Prepare actions
+        uses: ./.github/actions/prepare
+      - name: Check for unused code
+        run: pnpm knip
+      - uses: mshick/add-pr-comment@v2
+        if: failure()
+        with:
+          message-failure: |
+            Uh oh! Knip found unused code. Please run `pnpm knip` locally and fix the issues.
+
+name: Knip
+
+on:
+  pull_request: ~
+  merge_group: ~
+
+  push:
+    branches:
+      - main

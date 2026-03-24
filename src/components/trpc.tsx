@@ -1,7 +1,7 @@
 import { type DehydratedState, Hydrate, QueryClient } from '@tanstack/react-query';
 import { httpBatchLink } from '@trpc/client';
 import { createTRPCReact } from '@trpc/react-query';
-import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
+import type { inferRouterOutputs } from '@trpc/server';
 import { useState } from 'react';
 import superjson from 'superjson';
 
@@ -46,7 +46,6 @@ export function TRPCProvider({
 	);
 }
 
-export type RouterInput = inferRouterInputs<AppRouter>;
 export type RouterOutput = inferRouterOutputs<AppRouter>;
 
 export type RouterUtils = ReturnType<typeof trpc.useContext>;
