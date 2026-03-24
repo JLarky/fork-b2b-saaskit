@@ -2,9 +2,9 @@
 
 ## Setup
 
-- Tests run via `yarn test` which uses `doppler run -- vitest run`
+- Tests run via `pnpm test` which uses `doppler run -- vitest run`
 - All tests require Doppler to inject environment variables (no `SKIP_ENV_VALIDATION` fallback)
-- DB must have migrations applied (`doppler run yarn migrate`)
+- DB must have migrations applied (`doppler run pnpm migrate`)
 - CI needs a `DOPPLER_TOKEN` secret configured in GitHub
 
 ## Test Files

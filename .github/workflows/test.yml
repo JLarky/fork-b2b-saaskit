@@ -3,22 +3,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout actions
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Prepare actions
         uses: ./.github/actions/prepare
       - name: Install Doppler CLI
         uses: dopplerhq/cli-action@v3
       - name: Sync astro
-        run: yarn astro sync
+        run: pnpm astro sync
       - name: Unit tests
-        run: yarn test
+        run: pnpm test
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
       - uses: mshick/add-pr-comment@v2
         if: failure()
         with:
           message-failure: |
-            Uh oh! Tests failed. Run `yarn test` locally to reproduce.
+            Uh oh! Tests failed. Run `pnpm test` locally to reproduce.
 
 name: Test
 
