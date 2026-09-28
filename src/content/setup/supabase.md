@@ -14,12 +14,12 @@ Supabase is free for 2 lightweight projects.
 - Open a fresh editor buffer and paste the password there
 - Click "Create new project" - this can take a few minutes to complete
 
-2. Click on <a href="https://app.supabase.com/project/_/settings/database" >"Project Settings" - "Database"</a>, navigate to "Connection string" and copy the URI (it will look something like `postgresql://postgres.xxxxxxxxxxxxxxxxxxxx:[YOUR-PASSWORD]@aws-0-xx-xxxx-x.pooler.supabase.com:6543/postgres`)
+2. Click on <a href="https://supabase.com/dashboard/project/_/settings/database" >"Project Settings" - "Database"</a>, navigate to "Connection string" and copy the URI (it will look something like `postgresql://postgres.xxxxxxxxxxxxxxxxxxxx:[YOUR-PASSWORD]@aws-0-xx-xxxx-x.pooler.supabase.com:6543/postgres`)
 
 3. Paste the URI to the editor buffer from step 1, replace `[YOUR-PASSWORD]` with your password, then copy the resulting string
 
 4. Run `doppler secrets set DATABASE_URL` and set it the string from step 3
 
-5. Run `doppler run pnpm migrate` to initialize the database. You should see your new tables in the <a href="https://app.supabase.com/project/_/editor" >Supabase table editor</a>
+5. Run `doppler run pnpm migrate` to initialize the database. You should see your new tables in the <a href="https://supabase.com/dashboard/project/_/editor" >Supabase table editor</a>
 
 6. Restart `doppler run pnpm dev` to move to the next section of the tutorial
