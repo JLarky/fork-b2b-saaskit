@@ -8,6 +8,7 @@ import CheckerOverlay from '../components/head/CheckerOverlay.astro';
 import Posthog from '../components/head/Posthog.astro';
 import SEO, { type Props as SeoProps } from '../components/head/SEO.astro';
 
+/** @public Astro uses this type implicitly via Astro.props */
 export type Props = Simplify<SeoProps>;
 const props = Astro.props;
 ---

@@ -19,6 +19,7 @@
     "fix": "pnpm lint:fix; pnpm fmt",
     "lint:fix": "oxlint . --fix",
     "migrate": "tsx src/db/scripts/migrate",
+    "knip": "knip",
     "astro": "astro"
   },
   "dependencies": {
@@ -72,6 +73,7 @@
     "@tailwindcss/typography": "^0.5.9",
     "eslint-plugin-astro": "^1.2.3",
     "eslint-plugin-simple-import-sort": "^12.1.1",
+    "knip": "^6.0.4",
     "oxlint": "^1.56.0",
     "prettier": "^3.8.1",
     "prettier-plugin-astro": "^0.14.1",

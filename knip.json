@@ -1,0 +1,15 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": ["src/components/head/posthog.ts"],
+  "ignoreDependencies": [
+    "eslint-plugin-astro",
+    "eslint-plugin-simple-import-sort",
+    "postcss",
+    "prettier-plugin-tailwindcss"
+  ],
+  "ignoreBinaries": ["doppler"],
+  "ignoreExportsUsedInFile": true,
+  "postcss": {
+    "config": ["postcss.config.cjs"]
+  }
+}
