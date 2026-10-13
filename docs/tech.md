@@ -46,6 +46,9 @@ Notes:
 - Shared layouts: `src/layouts/`, `src/components/app/AppLayout.astro`
 - tRPC server: `src/lib/trpc/`
 - tRPC HTTP entrypoint: `src/pages/api/trpc/[trpc].ts`
+- Shared actions (one schema and `run`, used by tRPC and MCP): `src/lib/actions/`
+- Remote MCP (Streamable HTTP): `src/pages/mcp.ts` (`/mcp`)
+- Generated agent index: `src/pages/llms.txt.ts` (`/llms.txt`)
 - Other API routes: `src/pages/api/`
 - React Query + tRPC client provider: `src/components/trpc.tsx`
 - React Router SSR/static handler glue for `/app`: `src/lib/router.tsx`
