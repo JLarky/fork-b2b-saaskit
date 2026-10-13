@@ -349,6 +349,67 @@ Read more:
 
 </details>
 
+# Connect Claude Code or Cursor
+
+Prompt operations are defined once as actions (a description, a Zod schema, and `run`) and exposed both to the existing tRPC UI and as MCP tools. The remote endpoint is `/mcp` (Streamable HTTP).
+
+| Tool            | What it does                                       |
+| --------------- | -------------------------------------------------- |
+| `list-prompts`  | Prompts you can see in the active organization     |
+| `get-prompt`    | One prompt, with the same access checks as the app |
+| `create-prompt` | Create a prompt in the active organization         |
+
+Send a PropelAuth access token as `Authorization: Bearer`. That is the same token the app stores in the `b2b_auth` cookie. If the user belongs to more than one organization, also send `X-Org-Id`.
+
+Follow-up: full MCP OAuth (protected-resource metadata and dynamic client registration), so clients can sign in without a pasted token. Until then, a single long-lived service identity is available. Set `MCP_API_TOKEN`, `MCP_API_USER_ID`, and `MCP_API_ORG_ID` on the server and send that token as the bearer. The token acts as that one user and organization.
+
+`/llms.txt` is generated from the same action list.
+
+### Claude Code
+
+```bash
+claude mcp add --transport http prompts-with-friends http://localhost:3000/mcp \
+  --header "Authorization: Bearer YOUR_TOKEN"
+```
+
+Or in `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "prompts-with-friends": {
+      "type": "http",
+      "url": "http://localhost:3000/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_TOKEN",
+        "X-Org-Id": "YOUR_ORG_ID"
+      }
+    }
+  }
+}
+```
+
+### Cursor
+
+Add this to `.cursor/mcp.json` in the project, or to `~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "prompts-with-friends": {
+      "type": "http",
+      "url": "http://localhost:3000/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_TOKEN",
+        "X-Org-Id": "YOUR_ORG_ID"
+      }
+    }
+  }
+}
+```
+
+Use your deployed origin in place of `http://localhost:3000` when the app is not running locally. Omit `X-Org-Id` when the account belongs to a single organization.
+
 # License
 
 B2B SaaS Kit is licensed under the MIT License. See the [LICENSE](LICENSE.md) file for more details.

@@ -22,6 +22,11 @@ export const serverEnv = createEnv({
 		// optional Stripe
 		STRIPE_SECRET_KEY: z.string().min(1).optional(),
 		STRIPE_PRICE_ID: z.string().min(1).optional(),
+		// optional long-lived MCP bearer. Acts as MCP_API_USER_ID in MCP_API_ORG_ID.
+		// Full MCP OAuth is a follow-up; PropelAuth access tokens work without these.
+		MCP_API_TOKEN: z.string().min(1).optional(),
+		MCP_API_USER_ID: z.string().min(1).optional(),
+		MCP_API_ORG_ID: z.string().min(1).optional(),
 	},
 	client: {
 		// propel auth

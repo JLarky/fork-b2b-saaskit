@@ -1,16 +1,21 @@
-import type { User } from '@propelauth/node';
 import { TRPCError } from '@trpc/server';
-import { and, eq, or, sql } from 'drizzle-orm';
-import { nanoid } from 'nanoid';
+import { and, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
-import type { PrivacyLevel } from '../../../components/app/utils';
 import { db } from '../../../db/db';
 import { gptKeys, promptLikes, prompts, sharedKeyRatelimit } from '../../../db/schema';
 import { serverEnv } from '../../../t3-env';
+import { callAction } from '../../actions/call-action';
+import { createPrompt } from '../../actions/create-prompt';
+import { getPrompt } from '../../actions/get-prompt';
+import { listPrompts } from '../../actions/list-prompts';
+import {
+	messageSchema,
+	privacyLevelSchema,
+	type PromptPrivacyLevel,
+} from '../../actions/prompt-shared';
+import { actionContext } from '../../actions/registry';
 import { trackEvent } from '../../posthog';
-import { propelauth } from '../../propelauth';
-import { usersToPublicUserInfo } from '../../publicUserInfo';
 import { getStripeConfig, searchSubscriptionsByOrgId } from '../../stripe';
 import {
 	apiProcedure,
@@ -20,130 +25,33 @@ import {
 	publicProcedure,
 } from '../trpc';
 
-const messageSchema = z.object({
-	role: z.union([z.literal('user'), z.literal('assistant'), z.literal('system')]),
-	content: z.string(),
-});
-type Message = z.infer<typeof messageSchema>;
-const privacyLevelSchema = z.union([
-	z.literal('public'),
-	z.literal('team'),
-	z.literal('unlisted'),
-	z.literal('private'),
-]);
-export type PromptPrivacyLevel = z.infer<typeof privacyLevelSchema>;
+export type { PromptPrivacyLevel };
 
 export const promptsRouter = createTRPCRouter({
-	getPrompt: apiProcedure
-		.input(
-			z.object({
-				promptId: z.string(),
-			})
-		)
-		.query(async ({ input, ctx }) => {
-			const user = await ctx.userPromise;
-			const userData = user.kind === 'ok' ? user.user : undefined;
-			const userId = userData?.userId;
-			const res = await db
-				.select({
-					promptId: prompts.promptId,
-					userId: prompts.userId,
-					orgId: prompts.orgId,
-					privacyLevel: prompts.privacyLevel,
-					title: prompts.title,
-					description: prompts.description,
-					tags: prompts.tags,
-					template: prompts.template,
-					createdAt: prompts.createdAt,
-					updatedAt: prompts.updatedAt,
-					likes: sql<number>`count(${promptLikes.userId})::int`,
-					myLike: sql<boolean>`SUM(CASE WHEN ${promptLikes.userId} = (${
-						userId || null
-					})::text THEN 1 ELSE 0 END) > 0`,
+	getPrompt: apiProcedure.input(getPrompt.schema).query(async ({ input, ctx }) => {
+		const user = await ctx.userPromise;
+		return callAction(() =>
+			getPrompt.run(
+				input,
+				actionContext({
+					user: user.kind === 'ok' ? user.user : undefined,
+					orgId: ctx.userOrgId,
+					requestUrl: ctx.req.url,
 				})
-				.from(prompts)
-				.leftJoin(promptLikes, eq(promptLikes.promptId, prompts.promptId))
-				.groupBy(prompts.promptId)
-				.where(eq(prompts.promptId, input.promptId));
-			const originalPrompt = res[0];
-			if (!originalPrompt) {
-				throw new TRPCError({
-					code: 'NOT_FOUND',
-					message: `Prompt ${input.promptId} not found`,
-				});
-			}
-			const validPrivacyLevel = privacyLevelSchema.safeParse(originalPrompt.privacyLevel);
-			const prompt = {
-				...originalPrompt,
-				privacyLevel: validPrivacyLevel.success ? validPrivacyLevel.data : 'private',
-			};
-			const error = checkAccessToPrompt(prompt, userData);
-			if (error) {
-				if (error === 'UNAUTHORIZED') {
-					throw new TRPCError({
-						code: 'UNAUTHORIZED',
-						message: `You need to sign in to access this prompt`,
-					});
-				} else {
-					throw new TRPCError({
-						code: 'FORBIDDEN',
-						message: `You don't have access to this prompt`,
-					});
-				}
-			}
-			const users = await resolvePropelPublicUsers([prompt.userId]);
-			const author = users.kind === 'ok' ? users.users[prompt.userId] : undefined;
-			if (!author) {
-				console.error('Error fetching users', users);
-			}
-			const { likes, template, tags, myLike, ...rest } = prompt;
-			const validTemplate = z.array(messageSchema).safeParse(template);
-			const validTags = z.array(z.string()).safeParse(tags);
-			return {
-				canEdit: prompt.userId === userId,
-				likes,
-				myLike,
-				prompt: {
-					...rest,
-					template: validTemplate.success ? validTemplate.data : [],
-					tags: validTags.success ? validTags.data : [],
-				},
-				author,
-				shareUrl: new URL(ctx.req.url).origin + '/app/prompts/' + prompt.promptId,
-				publicUrl: new URL(ctx.req.url).origin + '/prompts/' + prompt.promptId,
-			};
-		}),
+			)
+		);
+	}),
 	getPrompts: orgProcedure.query(async ({ ctx }) => {
-		const p = (x: PromptPrivacyLevel) => x;
-		const promptsRes = await db
-			.select()
-			.from(prompts)
-			.where(
-				and(
-					eq(prompts.orgId, ctx.requiredOrgId),
-					or(
-						eq(prompts.privacyLevel, p('public')),
-						eq(prompts.privacyLevel, p('unlisted')),
-						eq(prompts.privacyLevel, p('team')),
-						and(eq(prompts.privacyLevel, p('private')), eq(prompts.userId, ctx.user.userId))
-					)
-				)
-			);
-		const userIds = new Set<string>();
-		promptsRes.forEach((x) => userIds.add(x.userId));
-		const users = await resolvePropelPublicUsers([...userIds]);
-		if (users.kind === 'error') {
-			console.error('Error fetching users', users.error);
-		}
-		return promptsRes.map((x) => ({
-			promptId: x.promptId,
-			userId: x.userId,
-			title: x.title,
-			isPublic: x.privacyLevel === 'public',
-			_meta: {
-				user: users.kind === 'ok' ? users.users[x.userId] : undefined,
-			},
-		}));
+		return callAction(() =>
+			listPrompts.run(
+				{},
+				actionContext({
+					user: ctx.user,
+					orgId: ctx.requiredOrgId,
+					requestUrl: ctx.req.url,
+				})
+			)
+		);
 	}),
 	getPublicPrompts: publicProcedure.query(async () => {
 		const promptsRes = await db
@@ -173,7 +81,7 @@ export const promptsRouter = createTRPCRouter({
 			const title = input.title || 'Untitled';
 			const description = input.description || '';
 			const tags = (input.tags || []).map((x) => x.trim()).filter((x) => x.length > 0);
-			const template = input.template satisfies Message[];
+			const template = input.template;
 			// TODO: check user and org access
 			{
 				const x = await db
@@ -213,39 +121,18 @@ export const promptsRouter = createTRPCRouter({
 				.where(eq(prompts.promptId, input.promptId));
 			return input.promptId;
 		}),
-	createPrompt: orgProcedure
-		.input(
-			z.object({
-				title: z.string().optional(),
-				description: z.string().optional(),
-				tags: z.array(z.string()),
-				template: z.array(messageSchema),
-				privacyLevel: privacyLevelSchema,
-			})
-		)
-		.mutation(async ({ ctx, input }) => {
-			const title = input.title || 'Untitled';
-			const description = input.description || '';
-			const tags = (input.tags || []).map((x) => x.trim()).filter((x) => x.length > 0);
-			const template = input.template satisfies Message[];
-			trackEvent(ctx.user, 'prompt_created');
-			const promptId = nanoid();
-			await db.insert(prompts).values({
-				orgId: ctx.requiredOrgId,
-				promptId,
-				userId: ctx.user.userId,
-				privacyLevel: input.privacyLevel,
-				title,
-				description,
-				tags,
-				template,
-			});
-			await db.insert(promptLikes).values({
-				promptId,
-				userId: ctx.user.userId,
-			});
-			return promptId;
-		}),
+	createPrompt: orgProcedure.input(createPrompt.schema).mutation(async ({ ctx, input }) => {
+		return callAction(() =>
+			createPrompt.run(
+				input,
+				actionContext({
+					user: ctx.user,
+					orgId: ctx.requiredOrgId,
+					requestUrl: ctx.req.url,
+				})
+			)
+		);
+	}),
 	deletePrompt: authProcedure
 		.input(
 			z.object({
@@ -455,52 +342,4 @@ async function rateLimitUpsert(userId: string, currentTimestamp: number) {
 
 	// +1 to get the value that we had before the UPSERT
 	return limit - first.value + 1;
-}
-
-function resolvePropelAuthUsers(userIds: string[]) {
-	return propelauth
-		.fetchBatchUserMetadataByUserIds(userIds)
-		.then((users) => ({ kind: 'ok' as const, users }))
-		.catch((error) => ({ kind: 'error' as const, error }));
-}
-
-function resolvePropelPublicUsers(userIds: string[]) {
-	return resolvePropelAuthUsers(userIds).then((result) => {
-		if (result.kind === 'ok') {
-			return { ...result, users: usersToPublicUserInfo(result.users) };
-		}
-		return result;
-	});
-}
-
-function checkAccessToPrompt(
-	prompt: { promptId: string; privacyLevel: PrivacyLevel; userId: string; orgId: string },
-	user: User | undefined
-) {
-	const privacyLevel = prompt.privacyLevel;
-
-	// everyone can access public and unlisted prompts
-	if (privacyLevel === 'public' || privacyLevel === 'unlisted') {
-		return undefined;
-	}
-	// you need to be signed in to access private or team prompts
-	if (!user) {
-		return 'UNAUTHORIZED';
-	}
-	// owners can access their own prompts
-	if (prompt.userId === user.userId) {
-		return undefined;
-	}
-	// no one else can access private prompts
-	if (privacyLevel === 'private') {
-		return 'FORBIDDEN';
-	}
-	// you need to be in the same team to access team prompts
-	if (privacyLevel === 'team') {
-		const hasAccess = user.orgIdToOrgMemberInfo?.[prompt.orgId] !== undefined;
-		if (hasAccess) {
-			return undefined;
-		}
-	}
-	return 'FORBIDDEN';
 }
